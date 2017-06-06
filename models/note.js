@@ -10,8 +10,12 @@ module.exports = function (sequelize, DataTypes) {
                 'allowNull': false
             },
             'note_date': {
-                'type': DataTypes.STRING(45),
+                'type': DataTypes.DOUBLE,
                 'allowNull': false
+            },
+            'note_title': {
+                'type': DataTypes.TEXT,
+                'allowNull': true
             },
             'note_content': {
                 'type': DataTypes.TEXT,

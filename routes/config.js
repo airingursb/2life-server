@@ -3,7 +3,9 @@ var MESSAGE = {
     PARAMETER_ERROR : '参数错误',   // 1000
     USER_NOT_EXIST : '用户不存在',   // 1001
     PASSWORD_ERROR : '账号密码错误',  // 1002
-    CODE_ERROR: '验证码错误' //1003
+    CODE_ERROR: '验证码错误', // 1003
+    USER_ALREADY_EXIST: '用户已被注册', // 1004
+    USER_ALREADY_CONNECT: '用户已被匹配', // 1005
 }
 
 var KEY = 'airing';

@@ -28,7 +28,7 @@ router.post('/code', function (req, res, next) {
 
     var postData = {
         mobile: req.body.user_account,
-        text:'【骑阅APP】您的验证码是' +  code,
+        text:'【双生APP】您的验证码是' +  code,
         apikey: ''  // 填写自己的云片API
     };
 
@@ -107,7 +107,7 @@ router.post('/register', function (req, res, next) {
                         user_sex: 0,
                         user_name: req.body.user_name,
                         user_other_id: -1,
-                        user_code: '0' + (Math.random()*89999 + 10000)
+                        user_code: '0' + Math.floor((Math.random()*89999 + 10000))
                     }
                     UserModel.create(user).then(function() {
                         return res.json({status: 0, data: user, msg: MESSAGE.SUCCESS});
@@ -183,7 +183,8 @@ router.post('/user', function (req, res, next) {
         }
     }).then(function (user) {
         if (!user) {
-            return res.json({status: 1002, msg: MESSAGE.USER_NOT_EXIST});
+            res.json({status: 1002, msg: MESSAGE.USER_NOT_EXIST});
+            return;
         }
         var userData = {
             uid: user.id,
@@ -225,6 +226,47 @@ router.post('/update', function (req, res, next) {
     }).catch(next);
 });
 
+/* users/close_connect */
+router.post('/close_connect', function (req, res, next) {
+
+    var timestamp = new Date().getTime();
+
+    if (req.body.uid == undefined || req.body.uid == ''
+        || req.body.timestamp == undefined || req.body.timestamp == ''
+        || req.body.token == undefined || req.body.token == ''
+        || req.body.user_other_id == undefined || req.body.user_other_id == '') {
+        res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
+        return;
+    }
+
+    log('users/close_connect');
+
+    UserModel.update({
+        user_other_id: -404,
+    }, {
+        where: {
+            id: req.body.uid
+        }
+    }).then(function(user) {
+        if (req.body.user_other_id !== -1) {
+            UserModel.update({
+                user_other_id: -1,
+            }, {
+                where: {
+                    id: req.body.user_other_id
+                }
+            }).then(function(user) {
+                res.json({status: 0, msg: MESSAGE.SUCCESS});
+                return;
+            })
+        } else {
+            res.json({status: 0, msg: MESSAGE.SUCCESS});
+            return;
+        }
+    }).catch(next);
+});
+
+
 /* users/connect */
 router.post('/connect', function (req, res, next) {
 
@@ -246,7 +288,7 @@ router.post('/connect', function (req, res, next) {
             user_other_id: -1
         }
     }).then(function(users) {
-        if (!users) {
+        if (!users[0]) {
             return res.json({status: 1001, msg: MESSAGE.USER_NOT_EXIST});
         }
         var user = users[Math.floor(Math.random()*users.length)]
@@ -286,23 +328,26 @@ router.post('/connect_by_id', function (req, res, next) {
 
     log('users/connect_by_id');
 
-    UserModel.findOne({
+    UserModel.findAll({
         where: {
             user_code: req.body.code,
             user_sex: req.body.sex == 0? 1: 0,
             user_other_id: -1
         }
-    }).then(function(user) {
-        if (!user) {
-            return res.json({status: 1001, msg: MESSAGE.USER_NOT_EXIST});
+    }).then(function(users) {
+        console.log(users[0] == null)
+        if (!users[0]) {
+            res.json({status: 1001, msg: MESSAGE.USER_NOT_EXIST});
+            return;
         }
+        var user = users[0];
         UserModel.update({
             user_other_id: user.id
         },{
             where: {
                id: req.body.uid, 
             }
-        }).then(function() {
+        }).then(function(result) {
             UserModel.update({
                 user_other_id: req.body.uid
             },{
@@ -310,11 +355,12 @@ router.post('/connect_by_id', function (req, res, next) {
                     id: user.id
                 }
             }).then(function() {
-                return res.json({status: 0, msg: MESSAGE.SUCCESS});
-            });
+                res.json({status: 0, data: user, msg: MESSAGE.SUCCESS});
+                return;
+            });    
         });
     }).catch(next);
-    return res.json({status: 1005, msg: MESSAGE.USER_ALREADY_CONNECT});
+    return;
 });
 
 /* users/disconnect */

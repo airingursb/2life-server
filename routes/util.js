@@ -1,9 +1,13 @@
 var express = require('express');
 var router = express.Router();
 var qiniu = require('qiniu');
+var QINIU_ACCESS = require('./config').QINIU_ACCESS;
+var QINIU_SECRET = require('./config').QINIU_SECRET;
+var BUCKET = require('./config').BUCKET;
 
-qiniu.conf.ACCESS_KEY = 'fbVYMBeuMglXqIDmW1H_tlOkb4CrxlLCIUPjGsRV';
-qiniu.conf.SECRET_KEY = 'UfLYZXK0ihHkaqTA2QQdzbn1FkDHH0G8oVCaRXMf';
+
+qiniu.conf.ACCESS_KEY = QINIU_ACCESS;
+qiniu.conf.SECRET_KEY = QINIU_SECRET;
 
 function uptoken(bucket, key) {
     var putPolicy = new qiniu.rs.PutPolicy(bucket + ":" + key);
@@ -19,7 +23,7 @@ router.post('/qiniu_token', function (req, res, next) {
 
         return res.json({status: 1})
     }
-	var qiniu_token = uptoken('rideread', req.body.filename);
+	var qiniu_token = uptoken(BUCKET, req.body.filename);
 
     return res.json({status: 0, qiniu_token: qiniu_token});
 });

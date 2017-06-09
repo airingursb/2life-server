@@ -1,4 +1,4 @@
-var MESSAGE = {
+const MESSAGE = {
     SUCCESS : '请求成功',   // 0
     PARAMETER_ERROR : '参数错误',   // 1000
     USER_NOT_EXIST : '用户不存在',   // 1001
@@ -10,7 +10,12 @@ var MESSAGE = {
     REQUEST_ERROR: '请求时间间隔过短', // 5000
 }
 
-var KEY = 'airing';
+const KEY = '';
+const SQL_PASSWORD = '';
+const YUNPIAN_APIKEY = '';
+const QINIU_ACCESS = '';
+const QINIU_SECRET = '';
+const BUCKET = '';
 
 function getNowFormatDate() {
     var date = new Date();
@@ -42,11 +47,16 @@ function getNowFormatDate() {
     return currentDate;
 }
 
-var log = function(api) {
+const log = function(api) {
 	console.log('POST: ' + api);
     console.log('TIME: ' + getNowFormatDate());
 }
 
 exports.MESSAGE = MESSAGE;
 exports.KEY = KEY;
+exports.SQL_PASSWORD = SQL_PASSWORD;
+exports.YUNPIAN_APIKEY = YUNPIAN_APIKEY;
+exports.QINIU_ACCESS = QINIU_ACCESS;
+exports.QINIU_SECRET = QINIU_SECRET;
+exports.BUCKET = BUCKET;
 exports.log = log;

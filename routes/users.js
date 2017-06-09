@@ -9,6 +9,7 @@ var md5 = require('md5');
 var MESSAGE = require('./config').MESSAGE;
 var KEY = require('./config').KEY;
 var log = require('./config').log;
+var YUNPIAN_APIKEY = require('./config').YUNPIAN_APIKEY;
 var https = require('https');
 var querystring = require('querystring');
 
@@ -29,7 +30,7 @@ router.post('/code', function (req, res, next) {
     var postData = {
         mobile: req.body.user_account,
         text:'【双生APP】您的验证码是' +  code,
-        apikey: ''  // 填写自己的云片API
+        apikey: YUNPIAN_APIKEY 
     };
 
     var content = querystring.stringify(postData);

@@ -53,21 +53,36 @@ router.post('/code', function (req, res, next) {
         used: false
     }
 
-    CodeModel.create(model).then(function() {
-        return res.json({status: 0, msg: MESSAGE.SUCCESS});
-    }).catch(next);
+    CodeModel.findAll({
+        where: {
+            user_account: req.body.user_account,
+            used: false
+        }
+    }).then(function(results) {
+        if (results[0] !== undefined) {
+            console.log('连续请求:' + (timestamp - results[0].timestamp));
+            if(timestamp - results[0].timestamp < 600000) {
+                res.json({status: 5000, msg: MESSAGE.REQUEST_ERROR});
+                return;
+            }
+        }
+        CodeModel.create(model).then(function() {
+            return res.json({status: 0, msg: MESSAGE.SUCCESS});
+        }).catch(next);
 
-    var req = https.request(options,function(res){
-        res.setEncoding('utf8');
-        res.on('data', function (chunk) {
-            console.log(JSON.parse(chunk));
+        var req = https.request(options,function(res){
+            res.setEncoding('utf8');
+            res.on('data', function (chunk) {
+                console.log(JSON.parse(chunk));
+            });
+            res.on('end',function(){
+                console.log('over');
+            });
         });
-        res.on('end',function(){
-            console.log('over');
-        });
-    });
-    req.write(content);
-    req.end();
+        req.write(content);
+        req.end();
+    })
+    
 })
 
 /* users/register */

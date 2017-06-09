@@ -6,6 +6,8 @@ var MESSAGE = {
     CODE_ERROR: '验证码错误', // 1003
     USER_ALREADY_EXIST: '用户已被注册', // 1004
     USER_ALREADY_CONNECT: '用户已被匹配', // 1005
+
+    REQUEST_ERROR: '请求时间间隔过短', // 5000
 }
 
 var KEY = 'airing';

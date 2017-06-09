@@ -37,6 +37,10 @@ module.exports = function (sequelize, DataTypes) {
                 'type': DataTypes.STRING(45),
                 'allowNull': true
             },
+            'token': {
+                'type': DataTypes.STRING(45),
+                'allowNull': true
+            },
         }
     );
 }

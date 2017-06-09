@@ -181,6 +181,27 @@ router.post('/login', function (req, res, next) {
     });
 });
 
+/* users/check */
+router.post('/check', function (req, res, next) {
+
+    var timestamp = new Date().getTime();
+
+    if (req.body.uid == undefined || req.body.uid == ''
+        || req.body.timestamp == undefined || req.body.timestamp == ''
+        || req.body.token == undefined || req.body.token == '') {
+        res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
+        return;
+    }
+
+    if (md5(req.body.uid + req.body.timestamp + KEY) == req.body.token) {
+        res.json({status: 0, msg: MESSAGE.SUCCESS});
+        return;
+    } else {
+        res.json({status: 4000, msg: MESSAGE.USER_NOT_LOGIN});
+        return;
+    }
+});
+
 /* users/user */
 router.post('/user', function (req, res, next) {
 

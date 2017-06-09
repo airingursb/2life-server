@@ -40,6 +40,31 @@ router.post('/save', function (req, res, next) {
     });
 });
 
+/* notes/delete */
+router.post('/delete', function (req, res, next) {
+
+    var timestamp = new Date().getTime();
+
+    if (req.body.uid == undefined || req.body.uid == ''
+        || req.body.token == undefined || req.body.token == ''
+        || req.body.timestamp == undefined || req.body.timestamp == ''
+        || req.body.note_id == undefined || req.body.note_id == '') {
+        res.json({status: 1, msg: MESSAGE.PARAMETER_ERROR});
+        return;
+    }
+
+    log('notes/delete');
+
+    NoteModel.destroy({
+        where: {
+            id: req.body.note_id
+        }
+    }).then(function() {
+        res.json({status: 0, msg: MESSAGE.SUCCESS})
+        return;
+    })
+});
+
 /* notes/show */
 router.post('/show', function (req, res, next) {
 

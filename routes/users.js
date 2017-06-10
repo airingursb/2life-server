@@ -166,7 +166,7 @@ router.post('/login', function (req, res, next) {
         if (user.user_password !== md5(req.body.user_password)) {
             return res.json({status: 1003, msg: MESSAGE.PASSWORD_ERROR});
         }
-        var token = md5(user.id + timestamp + KEY);
+        var token = md5((user.id).toString() + timestamp.toString() + KEY);
         var userData = {
             uid: user.id,
             user_name: user.user_name,
@@ -193,7 +193,8 @@ router.post('/check', function (req, res, next) {
         res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
         return;
     }
-
+    console.log('left:' + md5(req.body.uid + req.body.timestamp + KEY))
+    console.log('right:' + req.body.token)
     if (md5(req.body.uid + req.body.timestamp + KEY) == req.body.token) {
         res.json({status: 0, msg: MESSAGE.SUCCESS});
         return;
@@ -258,8 +259,26 @@ router.post('/update', function (req, res, next) {
         where: {
             id: req.body.uid
         }
-    }).then(function(user) {
-        res.json({status: 0, msg: MESSAGE.SUCCESS});
+    }).then(function() {
+        UserModel.findOne({
+            where: {
+                id: req.body.uid
+            }
+        }).then(function(user) {
+            var userData = {
+                uid: user.id,
+                user_name: user.user_name,
+                user_sex: user.user_sex,
+                token: req.body.token,
+                user_other_id: user.user_other_id,
+                created_at: user.createdAt,
+                updated_at: timestamp,
+                timestamp: req.body.timestamp,
+                user_code: user.user_code
+            };
+            res.json({status: 0, data: userData, msg: MESSAGE.SUCCESS});
+            return;
+        })
     }).catch(next);
 });
 
@@ -343,7 +362,15 @@ router.post('/connect', function (req, res, next) {
                     id: user.id
                 }
             }).then(function() {
-                return res.json({status: 0, data: user, msg: MESSAGE.SUCCESS});
+                var userData = {
+                    uid: user.id,
+                    user_name: user.user_name,
+                    user_sex: user.user_sex,
+                    user_id: user.user_other_id,
+                    created_at: user.createdAt,
+                    user_code: user.user_code
+                };
+                return res.json({status: 0, data: userData, msg: MESSAGE.SUCCESS});
             })
         })
     }).catch(next);
@@ -392,7 +419,15 @@ router.post('/connect_by_id', function (req, res, next) {
                     id: user.id
                 }
             }).then(function() {
-                res.json({status: 0, data: user, msg: MESSAGE.SUCCESS});
+                var userData = {
+                    uid: user.id,
+                    user_name: user.user_name,
+                    user_sex: user.user_sex,
+                    user_id: user.user_other_id,
+                    created_at: user.createdAt,
+                    user_code: user.user_code
+                };
+                res.json({status: 0, data: userData, msg: MESSAGE.SUCCESS});
                 return;
             });    
         });
@@ -458,6 +493,50 @@ router.post('/feedback', function (req, res, next) {
         user.createFeedback(feedback);
         res.json({status: 0, msg: MESSAGE.SUCCESS});
     }).catch(next);
+});
+
+/* users/answer_feedback */
+router.post('/answer_feedback', function (req, res, next) {
+
+    var timestamp = new Date().getTime();
+
+    if (req.body.contact == undefined || req.body.contact == ''
+        || req.body.content == undefined || req.body.content == '') {
+        res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
+        return;
+    }
+
+    var postData = {
+        mobile: req.body.contact,
+        text:'【双生APP】谢谢您的反馈，' +  req.body.content,
+        apikey: YUNPIAN_APIKEY 
+    };
+
+    var content = querystring.stringify(postData);
+
+    var options = {
+        host: 'sms.yunpian.com',
+        path: '/v2/sms/single_send.json',
+        method: 'POST',
+        agent: false,
+        rejectUnauthorized: false,
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Length': content.length
+        }
+    };
+
+    var req = https.request(options,function(res){
+        res.setEncoding('utf8');
+        res.on('data', function (chunk) {
+            console.log(JSON.parse(chunk));
+        });
+        res.on('end',function(){
+            console.log('over');
+        });
+    });
+    req.write(content);
+    req.end();
 });
 
 module.exports = router;

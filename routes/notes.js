@@ -105,6 +105,7 @@ router.post('/show', function (req, res, next) {
             noteData.note_date = note.note_date;
             
             note.user.id == req.body.uid ? noteData.male = my_sex : noteData.male = partner_sex;
+            note.user.id == req.body.uid ? noteData.me = 'yes' : noteData.me = 'no';
             notes.push(noteData);
         });
         res.json({status: 0, data: notes, msg: MESSAGE.SUCCESS});

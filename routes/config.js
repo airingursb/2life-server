@@ -16,6 +16,8 @@ const YUNPIAN_APIKEY = '';
 const QINIU_ACCESS = '';
 const QINIU_SECRET = '';
 const BUCKET = '';
+const ADMIN_USER = '';
+const ADMIN_PASSWORD = '';
 
 function getNowFormatDate() {
     var date = new Date();
@@ -58,5 +60,7 @@ exports.SQL_PASSWORD = SQL_PASSWORD;
 exports.YUNPIAN_APIKEY = YUNPIAN_APIKEY;
 exports.QINIU_ACCESS = QINIU_ACCESS;
 exports.QINIU_SECRET = QINIU_SECRET;
+exports.ADMIN_USER = ADMIN_USER;
+exports.ADMIN_PASSWORD = ADMIN_PASSWORD;
 exports.BUCKET = BUCKET;
 exports.log = log;

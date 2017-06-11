@@ -4,7 +4,7 @@ var User = sequelize.import('./user');
 var Note = sequelize.import('./note');
 var Feedback = sequelize.import('./feedback');
 var Code = sequelize.import('./code');
-
+var Message = sequelize.import('./message');
 
 User.hasMany(Note, {foreignKey: 'userId', targetKey: 'userId'});
 User.hasMany(Feedback, {foreignKey: 'userId', targetKey: 'userId'});
@@ -18,3 +18,4 @@ exports.User = User;
 exports.Note = Note;
 exports.Feedback = Feedback;
 exports.Code = Code;
+exports.Message = Message;

@@ -1,17 +1,21 @@
 var express = require('express');
 var router = express.Router();
+
 var UserModel = require('../models').User;
 var NoteModel = require('../models').Note;
 var CodeModel = require('../models').Code;
 var FeedbackModel  = require('../models').Feedback;
+var MessageModel = require('../models').Message;
+
 var sha1 = require('sha1');
 var md5 = require('md5');
+var https = require('https');
+var querystring = require('querystring');
+
 var MESSAGE = require('./config').MESSAGE;
 var KEY = require('./config').KEY;
 var log = require('./config').log;
 var YUNPIAN_APIKEY = require('./config').YUNPIAN_APIKEY;
-var https = require('https');
-var querystring = require('querystring');
 
 /* users/code */
 router.post('/code', function (req, res, next) {
@@ -123,7 +127,8 @@ router.post('/register', function (req, res, next) {
                         user_sex: 0,
                         user_name: req.body.user_name,
                         user_other_id: -1,
-                        user_code: '0' + Math.floor((Math.random()*89999 + 10000))
+                        user_code: '0' + Math.floor((Math.random()*89999 + 10000)),
+                        user_message: 1
                     }
                     UserModel.create(user).then(function() {
                         return res.json({status: 0, data: user, msg: MESSAGE.SUCCESS});
@@ -176,7 +181,8 @@ router.post('/login', function (req, res, next) {
             created_at: user.createdAt,
             updated_at: timestamp,
             timestamp: timestamp,
-            user_code: user.user_code
+            user_code: user.user_code,
+            user_message: user.user_message
         };
         res.json({status: 0, data: userData, msg: MESSAGE.SUCCESS});
     });
@@ -495,48 +501,43 @@ router.post('/feedback', function (req, res, next) {
     }).catch(next);
 });
 
-/* users/answer_feedback */
-router.post('/answer_feedback', function (req, res, next) {
+/* users/show_notification */
+router.post('/show_notification', function (req, res, next) {
 
     var timestamp = new Date().getTime();
 
-    if (req.body.contact == undefined || req.body.contact == ''
-        || req.body.content == undefined || req.body.content == '') {
+    if (req.body.uid == undefined || req.body.uid == ''
+        || req.body.timestamp == undefined || req.body.timestamp == ''
+        || req.body.token == undefined || req.body.token == '') {
         res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
         return;
     }
 
-    var postData = {
-        mobile: req.body.contact,
-        text:'【双生APP】谢谢您的反馈，' +  req.body.content,
-        apikey: YUNPIAN_APIKEY 
-    };
+    MessageModel.findAll().then(function(result) {
+        var messages = [];
 
-    var content = querystring.stringify(postData);
-
-    var options = {
-        host: 'sms.yunpian.com',
-        path: '/v2/sms/single_send.json',
-        method: 'POST',
-        agent: false,
-        rejectUnauthorized: false,
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Content-Length': content.length
-        }
-    };
-
-    var req = https.request(options,function(res){
-        res.setEncoding('utf8');
-        res.on('data', function (chunk) {
-            console.log(JSON.parse(chunk));
-        });
-        res.on('end',function(){
-            console.log('over');
-        });
-    });
-    req.write(content);
-    req.end();
+        result.forEach(function(message) {
+            var messageData = {};
+            messageData.id = message.id;
+            messageData.time = message.message_date;
+            messageData.title = message.message_title;
+            messageData.content = message.message_content;
+            messageData.image = message.message_image;
+            messageData.type = message.message_type;
+            messageData.url = message.message_url;
+            messages.push(messageData);          
+        })
+        UserModel.update({
+            user_message: 0
+        }, {
+            where: {
+                id: req.body.uid
+            }
+        }).then(function() {
+            res.json({status: 0, msg: MESSAGE.SUCCESS, data: messages})
+            return;
+        })
+    })
 });
 
 module.exports = router;

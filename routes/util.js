@@ -26,7 +26,7 @@ router.post('/qiniu_token', function (req, res, next) {
         || req.body.uid == undefined || req.body.uid == ''
         || req.body.filename == undefined || req.body.filename == '') {
 
-        return res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR})
+        return res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
     }
 	var qiniu_token = uptoken(BUCKET, req.body.filename);
 
@@ -47,8 +47,12 @@ router.post('/push_message', function (req, res, next) {
         || req.body.image == undefined || req.body.image == ''
         || req.body.url == undefined || req.body.url == '') {
 
-        return res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR})
+        return res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
 	}
+
+    if (req.body.user !== ADMIN_USER && req.body.password !== ADMIN_PASSWORD) {
+        return res.json({status: 3000, msg: MESSAGE.ADMIN_ERROR});
+    }
 
 	var message = {
 		message_title: req.body.title,
@@ -64,10 +68,9 @@ router.post('/push_message', function (req, res, next) {
 			user_message: 1
 		}).then(function() {
 			return res.json({status: 0, msg: MESSAGE.SUCCESS});
-		})
-	})
+		});
+	});
 });
-
 
 /* utils/answer_feedback */
 router.post('/answer_feedback', function (req, res, next) {

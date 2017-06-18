@@ -263,7 +263,7 @@ router.post('/update', function (req, res, next) {
 
     UserModel.update({
         user_name: req.body.user_name,
-        user_sex: req.body.user_sex
+        user_sex: req.body.user_sex,
         user_face: req.body.user_face
     }, {
         where: {
@@ -377,6 +377,7 @@ router.post('/connect', function (req, res, next) {
                     uid: user.id,
                     user_name: user.user_name,
                     user_sex: user.user_sex,
+                    user_face: user.user_face,
                     user_id: user.user_other_id,
                     user_code: user.user_code
                 };
@@ -433,6 +434,7 @@ router.post('/connect_by_id', function (req, res, next) {
                     uid: user.id,
                     user_name: user.user_name,
                     user_sex: user.user_sex,
+                    user_face: user.user_face,
                     user_id: user.user_other_id,
                     created_at: user.createdAt,
                     user_code: user.user_code

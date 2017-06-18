@@ -12,6 +12,12 @@ var log = require('./config').log;
 router.post('/save', function (req, res, next) {
 
     var timestamp = new Date().getTime();
+    console.log('req.body.note_title: ' + req.body.note_title)
+    console.log('req.body.note_content: ' + req.body.note_content)
+    console.log('req.body.note_date: ' + req.body.note_date)
+
+    console.log('req.body.note_location: ' + req.body.note_location)
+    console.log('req.body.note_images: ' + req.body.note_images)
 
     if (req.body.uid == undefined || req.body.uid == ''
         || req.body.token == undefined || req.body.token == ''
@@ -30,8 +36,8 @@ router.post('/save', function (req, res, next) {
     log('notes/save');
 
     var note = {
-        note_title: req.body.note_title,
-        note_content: req.body.note_content,
+        note_title: new Buffer(req.body.note_title).toString('base64'),
+        note_content: new Buffer(req.body.note_content).toString('base64'),
         note_date: req.body.note_date,
         note_location: req.body.note_location,
         note_longitude: req.body.note_longitude,
@@ -108,8 +114,8 @@ router.post('/show', function (req, res, next) {
         result.forEach(function (note) {
             var noteData = {};
             noteData.note_id = note.id;
-            noteData.note_title = note.note_title;
-            noteData.note_content = note.note_content;
+            noteData.note_title = note.note_date < 1497780516378 ? note.note_title : new Buffer(note.note_title, 'base64').toString();
+            noteData.note_content = note.note_date < 1497780516378 ? note.note_content : new Buffer(note.note_content, 'base64').toString();
             noteData.note_date = note.note_date;
             noteData.note_location = note.note_location;
             noteData.note_images = note.note_images;

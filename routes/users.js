@@ -128,7 +128,8 @@ router.post('/register', function (req, res, next) {
                         user_name: req.body.user_name,
                         user_other_id: -1,
                         user_code: '0' + Math.floor((Math.random()*89999 + 10000)),
-                        user_message: 1
+                        user_message: 1,
+                        user_face: 'https://airing.ursb.me/image/twolife/male.png'
                     }
                     UserModel.create(user).then(function() {
                         return res.json({status: 0, data: user, msg: MESSAGE.SUCCESS});

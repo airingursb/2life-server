@@ -24,6 +24,7 @@ router.post('/qiniu_token', function (req, res, next) {
 
     if (req.body.token == undefined || req.body.token == ''
         || req.body.uid == undefined || req.body.uid == ''
+        || req.body.timestamp == undefined || req.body.timestamp == ''
         || req.body.filename == undefined || req.body.filename == '') {
 
         return res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});

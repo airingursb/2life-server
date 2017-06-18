@@ -18,7 +18,11 @@ router.post('/save', function (req, res, next) {
         || req.body.timestamp == undefined || req.body.timestamp == ''
         || req.body.note_title == undefined || req.body.note_title == ''
         || req.body.note_content == undefined || req.body.note_content == ''
-        || req.body.note_date == undefined || req.body.note_date == '') {
+        || req.body.note_date == undefined || req.body.note_date == ''
+        || req.body.note_location == undefined || req.body.note_location == ''
+        || req.body.note_longitude == undefined || req.body.note_longitude == ''
+        || req.body.note_latitude == undefined || req.body.note_latitude == ''
+        || req.body.note_images == undefined || req.body.note_images == '') {
         res.json({status: 1, msg: MESSAGE.PARAMETER_ERROR});
         return;
     }
@@ -29,6 +33,10 @@ router.post('/save', function (req, res, next) {
         note_title: req.body.note_title,
         note_content: req.body.note_content,
         note_date: req.body.note_date,
+        note_location: req.body.note_location,
+        note_longitude: req.body.note_longitude,
+        note_latitude: req.body.note_latitude,
+        note_images: req.body.note_images
     };
     UserModel.findOne({
         where: {
@@ -103,6 +111,8 @@ router.post('/show', function (req, res, next) {
             noteData.note_title = note.note_title;
             noteData.note_content = note.note_content;
             noteData.note_date = note.note_date;
+            noteData.note_location = note.note_location;
+            noteData.note_images = note.note_images;
             
             note.user.id == req.body.uid ? noteData.male = my_sex : noteData.male = partner_sex;
             note.user.id == req.body.uid ? noteData.me = 'yes' : noteData.me = 'no';

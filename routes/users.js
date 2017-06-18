@@ -176,6 +176,7 @@ router.post('/login', function (req, res, next) {
             uid: user.id,
             user_name: user.user_name,
             user_sex: user.user_sex,
+            user_face: user.user_face,
             token: token,
             user_other_id: user.user_other_id,
             created_at: user.createdAt,
@@ -234,6 +235,7 @@ router.post('/user', function (req, res, next) {
             uid: user.id,
             user_name: user.user_name,
             user_sex: user.user_sex,
+            user_face: user.user_face,
             user_id: user.user_other_id,
             created_at: user.createdAt,
             user_code: user.user_code
@@ -251,7 +253,8 @@ router.post('/update', function (req, res, next) {
         || req.body.timestamp == undefined || req.body.timestamp == ''
         || req.body.token == undefined || req.body.token == ''
         || req.body.user_sex == undefined || req.body.user_sex == ''
-        || req.body.user_name == undefined || req.body.user_name == '') {
+        || req.body.user_name == undefined || req.body.user_name == ''
+        || req.body.user_face == undefined || req.body.user_face == '') {
         res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
         return;
     }
@@ -261,6 +264,7 @@ router.post('/update', function (req, res, next) {
     UserModel.update({
         user_name: req.body.user_name,
         user_sex: req.body.user_sex
+        user_face: req.body.user_face
     }, {
         where: {
             id: req.body.uid
@@ -275,6 +279,7 @@ router.post('/update', function (req, res, next) {
                 uid: user.id,
                 user_name: user.user_name,
                 user_sex: user.user_sex,
+                user_face: user.user_face,
                 token: req.body.token,
                 user_other_id: user.user_other_id,
                 created_at: user.createdAt,
@@ -373,7 +378,6 @@ router.post('/connect', function (req, res, next) {
                     user_name: user.user_name,
                     user_sex: user.user_sex,
                     user_id: user.user_other_id,
-                    created_at: user.createdAt,
                     user_code: user.user_code
                 };
                 return res.json({status: 0, data: userData, msg: MESSAGE.SUCCESS});
@@ -513,7 +517,9 @@ router.post('/show_notification', function (req, res, next) {
         return;
     }
 
-    MessageModel.findAll().then(function(result) {
+    MessageModel.findAll({
+        'order': "message_date DESC"
+    }).then(function(result) {
         var messages = [];
 
         result.forEach(function(message) {

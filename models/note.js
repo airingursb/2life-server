@@ -24,6 +24,18 @@ module.exports = function (sequelize, DataTypes) {
             'note_images': {
                 'type': DataTypes.TEXT,
                 'allowNull': true
+            },
+            'note_latitude': {
+                'type': DataTypes.DOUBLE,
+                'allowNull': true
+            },
+            'note_longitude': {
+                'type': DataTypes.DOUBLE,
+                'allowNull': true
+            },
+            'note_location': {
+                'type': DataTypes.STRING(245),
+                'allowNull': true
             }
         },
         {

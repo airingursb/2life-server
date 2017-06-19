@@ -462,16 +462,25 @@ router.post('/disconnect', function (req, res, next) {
     }
 
     log('users/disconnect');
-
-    UserModel.update({
-        user_other_id: -1
-    },{
+    UserModel.findAll({
         where: {
-            id: [req.body.uid, req.body.user_id]
+            user_other_id: req.body.uid
         }
-    }).then(function(result) {
-        return res.json({status: 0, msg: MESSAGE.SUCCESS});
-    }).catch(next);
+    }).then(function(users) {
+        var ids = [req.body.uid]
+        users.forEach(function(o) {
+            ids.push(o.id)
+        })
+        UserModel.update({
+            user_other_id: -1
+        },{
+            where: {
+                id: ids
+            }
+        }).then(function(result) {
+            return res.json({status: 0, msg: MESSAGE.SUCCESS});
+        }).catch(next);
+    })
 
 });
 

@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var qiniu = require('qiniu');
 var UserModel = require('../models').User;
+var NoteModel = require('../models').Note;
 var MessageModel = require('../models').Message;
 
 var QINIU_ACCESS = require('./config').QINIU_ACCESS;
@@ -115,6 +116,38 @@ router.post('/answer_feedback', function (req, res, next) {
     });
     req.write(content);
     req.end();
+});
+
+/* 后台获取日记 */
+router.post('/get_all_note', function (req, res, next) {
+
+    if (req.body.password == undefined || req.body.password == ''
+        || req.body.admin == undefined || req.body.admin == '') {
+
+        return res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
+    }
+    if (req.body.admin == ADMIN_USER 
+        && req.body.password == ADMIN_PASSWORD) {
+        NoteModel.findAll({
+            include: [UserModel]
+        }).then(function(result){
+            var notes = [];
+            result.forEach(function(d) {
+                var note = {};
+                note.id = d.id;
+                note.user = d.user;
+                note.note_title = d.note_date < 1497780516378 ? d.note_title : new Buffer(d.note_title, 'base64').toString();
+                note.note_content = d.note_date < 1497780516378 ? d.note_content : new Buffer(d.note_content, 'base64').toString();
+                note.time = d.createdAt;
+                note.note_location = d.note_location;
+                notes.push(note);
+            })
+            return res.json({status: 0, data: notes, msg: MESSAGE.SUCCESS});
+        })
+    } else {
+        return res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
+    }
+
 });
 
 module.exports = router;

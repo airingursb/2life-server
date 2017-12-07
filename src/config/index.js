@@ -2,6 +2,7 @@ import md5 from 'md5'
 
 export const MESSAGE = {
   SUCCESS: '请求成功', // 0
+  TOKEN_ERROR: 'TOKEN错误', // 500
   PARAMETER_ERROR: '参数错误', // 1000
   USER_NOT_EXIST: '用户不存在', // 1001
   PASSWORD_ERROR: '账号密码错误', // 1002

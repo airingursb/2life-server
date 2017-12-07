@@ -1,153 +1,82 @@
-var express = require('express');
-var router = express.Router();
-var qiniu = require('qiniu');
-var UserModel = require('../models').User;
-var NoteModel = require('../models').Note;
-var MessageModel = require('../models').Message;
+import express from 'express'
+import qiniu from 'qiniu'
+import {User, Message, Note} from '../models'
+import * as Model from '../models/util'
 
-var QINIU_ACCESS = require('./config').QINIU_ACCESS;
-var QINIU_SECRET = require('./config').QINIU_SECRET;
-var BUCKET = require('./config').BUCKET;
-var MESSAGE = require('./config').MESSAGE;
-var ADMIN_USER = require('./config').ADMIN_USER;
-var ADMIN_PASSWORD = require('./config').ADMIN_PASSWORD;
+import {
+  QINIU_ACCESS,
+  QINIU_SECRET,
+  BUCKET,
+  MESSAGE,
+  ADMIN_USER,
+  ADMIN_PASSWORD
+} from '../config/index'
 
-qiniu.conf.ACCESS_KEY = QINIU_ACCESS;
-qiniu.conf.SECRET_KEY = QINIU_SECRET;
+const router = express.Router()
+qiniu.conf.ACCESS_KEY = QINIU_ACCESS
+qiniu.conf.SECRET_KEY = QINIU_SECRET
 
-function uptoken(bucket, key) {
-  var putPolicy = new qiniu.rs.PutPolicy(bucket + ":" + key);
-  return putPolicy.token();
+const uptoken = (bucket, key) => {
+  const putPolicy = new qiniu.rs.PutPolicy(bucket + ':' + key)
+  return putPolicy.token()
 }
 
 /* 获取七牛token */
-router.post('/qiniu_token', function (req, res, next) {
+router.post('/qiniu_token', (req, res) => {
+  const {filename} = req.body
+  const qiniu_token = uptoken(BUCKET, filename)
 
-  if (req.body.token == undefined || req.body.token == ''
-    || req.body.uid == undefined || req.body.uid == ''
-    || req.body.timestamp == undefined || req.body.timestamp == ''
-    || req.body.filename == undefined || req.body.filename == '') {
-
-    return res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
-  }
-  var qiniu_token = uptoken(BUCKET, req.body.filename);
-
-  return res.json({status: 0, qiniu_token: qiniu_token, msg: MESSAGE.SUCCESS});
-});
+  return res.json({code: 0, qiniu_token, msg: MESSAGE.SUCCESS})
+})
 
 /* 后台发送通知 */
-router.post('/push_message', function (req, res, next) {
+router.post('/push_message', (req, res) => {
 
-  var timestamp = new Date().getTime();
+  const {user, password, type, title, content, image, url} = req.body
 
-  if (req.body.user == undefined || req.body.user == ''
-    || req.body.password == undefined || req.body.password == ''
-    || req.body.type == undefined || req.body.type == ''
-    || req.body.title == undefined || req.body.title == ''
-    || req.body.content == undefined || req.body.content == ''
-    || req.body.user_id == undefined || req.body.user_id == ''
-    || req.body.image == undefined || req.body.image == ''
-    || req.body.url == undefined || req.body.url == '') {
+  if (user !== ADMIN_USER && password !== ADMIN_PASSWORD)
+    return res.json({code: 3000, msg: MESSAGE.ADMIN_ERROR})
 
-    return res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
+  const message = {
+    message_title: title,
+    message_content: content,
+    message_date: Date.now(),
+    message_type: type,
+    message_image: image,
+    message_url: url
   }
 
-  if (req.body.user !== ADMIN_USER && req.body.password !== ADMIN_PASSWORD) {
-    return res.json({status: 3000, msg: MESSAGE.ADMIN_ERROR});
+  const response = async () => {
+    await Model.create(Message, message)
+    await Model.update(User, {user_message: 1}, {})
+    return res.json({code: 0, msg: MESSAGE.SUCCESS})
   }
 
-  var message = {
-    message_title: req.body.title,
-    message_content: req.body.content,
-    message_date: timestamp,
-    message_type: req.body.type,
-    message_image: req.body.image,
-    message_url: req.body.url
-  }
-
-  MessageModel.create(message).then(function () {
-    UserModel.update({
-      user_message: 1
-    }).then(function () {
-      return res.json({status: 0, msg: MESSAGE.SUCCESS});
-    });
-  });
-});
-
-/* utils/answer_feedback */
-router.post('/answer_feedback', function (req, res, next) {
-
-  var timestamp = new Date().getTime();
-
-  if (req.body.contact == undefined || req.body.contact == ''
-    || req.body.content == undefined || req.body.content == '') {
-    res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
-    return;
-  }
-
-  var postData = {
-    mobile: req.body.contact,
-    text: '【双生APP】谢谢您的反馈，' + req.body.content,
-    apikey: YUNPIAN_APIKEY
-  };
-
-  var content = querystring.stringify(postData);
-
-  var options = {
-    host: 'sms.yunpian.com',
-    path: '/v2/sms/single_send.json',
-    method: 'POST',
-    agent: false,
-    rejectUnauthorized: false,
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Content-Length': content.length
-    }
-  };
-
-  var req = https.request(options, function (res) {
-    res.setEncoding('utf8');
-    res.on('data', function (chunk) {
-      console.log(JSON.parse(chunk));
-    });
-    res.on('end', function () {
-      console.log('over');
-    });
-  });
-  req.write(content);
-  req.end();
-});
+  response()
+})
 
 /* 后台获取日记 */
-router.post('/get_all_note', function (req, res, next) {
+router.post('/get_all_note', (req, res) => {
+  const {admin, password} = req.body
 
-  if (req.body.password == undefined || req.body.password == ''
-    || req.body.admin == undefined || req.body.admin == '') {
-
-    return res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
-  }
-  if (req.body.admin == ADMIN_USER
-    && req.body.password == ADMIN_PASSWORD) {
-    NoteModel.findAll({
-      include: [UserModel]
-    }).then(function (result) {
-      var notes = [];
-      result.forEach(function (d) {
-        var note = {};
-        note.id = d.id;
-        note.user = d.user;
-        note.note_title = d.note_date < 1497780516378 ? d.note_title : new Buffer(d.note_title, 'base64').toString();
-        note.note_content = d.note_date < 1497780516378 ? d.note_content : new Buffer(d.note_content, 'base64').toString();
-        note.time = d.createdAt;
-        note.note_location = d.note_location;
-        notes.push(note);
+  const response = async () => {
+    const notes = await Model.findAll(Note, {}, [User])
+    if (admin === ADMIN_USER && password === ADMIN_PASSWORD) {
+      const data = await notes.map(note => {
+        note.dataValues.note_title = note.dataValues.note_date < 1497780516378
+          ? note.dataValues.note_title
+          : new Buffer(note.dataValues.note_title, 'base64').toString()
+        note.dataValues.note_content = note.dataValues.note_date < 1497780516378
+          ? note.dataValues.note_content
+          : new Buffer(note.dataValues.note_content, 'base64').toString()
+        return {...note.dataValues}
       })
-      return res.json({status: 0, data: notes, msg: MESSAGE.SUCCESS});
-    })
-  } else {
-    return res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
+      return res.json({code: 0, data, msg: MESSAGE.SUCCESS})
+    }
+    return res.json({code: 1000, msg: MESSAGE.PARAMETER_ERROR})
   }
 
-});
+  response()
+})
 
-module.exports = router;
+module.exports = router

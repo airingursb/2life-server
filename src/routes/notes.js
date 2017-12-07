@@ -33,8 +33,6 @@ router.post('/save', function (req, res, next) {
     return;
   }
 
-  log('notes/save');
-
   var note = {
     note_title: new Buffer(req.body.note_title).toString('base64'),
     note_content: new Buffer(req.body.note_content).toString('base64'),
@@ -92,8 +90,6 @@ router.post('/show', function (req, res, next) {
     res.json({status: 1, msg: MESSAGE.PARAMETER_ERROR});
     return;
   }
-
-  log('notes/show');
 
   var whereCondition = {userId: req.body.uid};
 

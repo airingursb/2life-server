@@ -27,8 +27,6 @@ router.post('/code', function (req, res, next) {
     return;
   }
 
-  log('users/code');
-
   var code = Math.floor(Math.random() * 8999 + 1000)
 
   var postData = {
@@ -104,8 +102,6 @@ router.post('/register', function (req, res, next) {
     return;
   }
 
-  log('users/register');
-
   CodeModel.findOne({
     where: {
       user_account: req.body.user_account,
@@ -155,8 +151,6 @@ router.post('/login', function (req, res, next) {
     return;
   }
 
-  log('users/login');
-
   var user = {
     user_account: req.body.user_account,
     user_password: md5(req.body.user_password)
@@ -201,8 +195,7 @@ router.post('/check', function (req, res, next) {
     res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
     return;
   }
-  console.log('left:' + md5(req.body.uid + req.body.timestamp + KEY))
-  console.log('right:' + req.body.token)
+
   if (md5(req.body.uid + req.body.timestamp + KEY) == req.body.token) {
     res.json({status: 0, msg: MESSAGE.SUCCESS});
     return;
@@ -222,7 +215,6 @@ router.post('/user', function (req, res, next) {
     return;
   }
 
-  log('users/user');
   UserModel.findOne({
     where: {
       id: req.body.user_id
@@ -259,8 +251,6 @@ router.post('/update', function (req, res, next) {
     res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
     return;
   }
-
-  log('users/update');
 
   UserModel.update({
     user_name: req.body.user_name,
@@ -307,8 +297,6 @@ router.post('/close_connect', function (req, res, next) {
     return;
   }
 
-  log('users/close_connect');
-
   UserModel.update({
     user_other_id: -404,
   }, {
@@ -347,8 +335,6 @@ router.post('/connect', function (req, res, next) {
     res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
     return;
   }
-
-  log('users/connect');
 
   UserModel.findAll({
     where: {
@@ -402,8 +388,6 @@ router.post('/connect_by_id', function (req, res, next) {
     return;
   }
 
-  log('users/connect_by_id');
-
   UserModel.findAll({
     where: {
       user_code: req.body.code,
@@ -411,7 +395,6 @@ router.post('/connect_by_id', function (req, res, next) {
       user_other_id: -1
     }
   }).then(function (users) {
-    console.log(users[0] == null)
     if (!users[0]) {
       res.json({status: 1001, msg: MESSAGE.USER_NOT_EXIST});
       return;
@@ -461,7 +444,6 @@ router.post('/disconnect', function (req, res, next) {
     return;
   }
 
-  log('users/disconnect');
   UserModel.findAll({
     where: {
       user_other_id: req.body.uid
@@ -497,8 +479,6 @@ router.post('/feedback', function (req, res, next) {
     res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
     return;
   }
-
-  log('users/feedback');
 
   var feedback = {
     contact: req.body.contact,

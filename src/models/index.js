@@ -1,21 +1,23 @@
-var Sequelize = require('sequelize');
-var sequelize = require('../config/sequelize').sequelize();
-var User = sequelize.import('./user');
-var Note = sequelize.import('./note');
-var Feedback = sequelize.import('./feedback');
-var Code = sequelize.import('./code');
-var Message = sequelize.import('./message');
+const db = require('../config/sequelize').dbConnect()
 
-User.hasMany(Note, {foreignKey: 'userId', targetKey: 'userId'});
-User.hasMany(Feedback, {foreignKey: 'userId', targetKey: 'userId'});
+const User = db.import('./user')
+const Note = db.import('./note')
+const Feedback = db.import('./feedback')
+const Code = db.import('./code')
+const Message = db.import('./message')
 
-Note.belongsTo(User);
-Feedback.belongsTo(User);
+User.hasMany(Note, {foreignKey: 'userId', targetKey: 'userId'})
+User.hasMany(Feedback, {foreignKey: 'userId', targetKey: 'userId'})
 
-sequelize.sync();
+Note.belongsTo(User)
+Feedback.belongsTo(User)
 
-exports.User = User;
-exports.Note = Note;
-exports.Feedback = Feedback;
-exports.Code = Code;
-exports.Message = Message;
+db.sync()
+
+module.exports = {
+  User,
+  Note,
+  Feedback,
+  Code,
+  Message
+}

@@ -1,7 +1,4 @@
-/**
- * Created by airing on 2017/6/11.
- */
-module.exports = function (sequelize, DataTypes) {
+module.exports = (sequelize, DataTypes) => {
   return sequelize.define(
     'message',
     {
@@ -30,5 +27,5 @@ module.exports = function (sequelize, DataTypes) {
         'allowNull': true
       }
     }
-  );
+  )
 }

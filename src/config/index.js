@@ -1,3 +1,5 @@
+import md5 from 'md5'
+
 export const MESSAGE = {
   SUCCESS: '请求成功', // 0
   PARAMETER_ERROR: '参数错误', // 1000
@@ -19,33 +21,13 @@ export const QINIU_ACCESS = '' // 七牛ACCESS
 export const QINIU_SECRET = '' // 七牛SECRET
 export const BUCKET = '' // 七牛BUCKET
 export const ADMIN_USER = 'airing'
-export const ADMIN_PASSWORD = '1123581321'
+export const ADMIN_PASSWORD = ''
 
-export const getNowFormatDate = () => {
-  const date = new Date()
-  const seperator1 = '-'
-  const seperator2 = ':'
-  let month = date.getMonth() + 1
-  let strDate = date.getDate()
-  let strHours = date.getHours()
-  let strMinutes = date.getMinutes()
-  let strSeconds = date.getSeconds()
-  if (month >= 1 && month <= 9) {
-    month = '0' + month
-  }
-  if (strDate >= 0 && strDate <= 9) {
-    strDate = '0' + strDate
-  }
-  if (strHours >= 0 && strHours <= 9) {
-    strHours = '0' + strHours
-  }
-  if (strMinutes >= 0 && strMinutes <= 9) {
-    strMinutes = '0' + strMinutes
-  }
-  if (strSeconds >= 0 && strSeconds <= 9) {
-    strSeconds = '0' + strSeconds
-  }
-  return date.getFullYear() + seperator1 + month + seperator1 + strDate
-    + 'T' + strHours + seperator2 + strMinutes
-    + seperator2 + strSeconds + '.000Z'
+export const md5Pwd = (password) => {
+  const salt = 'Airing_is_genius_3957x8yza6!@#IUHJh~~'
+  return md5(md5(password + salt))
+}
+
+export const checkToken = function (uid, timestamp, token) {
+  return token === md5(uid.toString() + timestamp.toString() + KEY)
 }

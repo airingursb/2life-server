@@ -40,7 +40,7 @@ gulp.task('dev', () => {
   })
 })
 
-gulp.task('default', ['transform'], () => {
+gulp.task('default', ['transform', 'lint'], () => {
   nodemon({
     script: 'dist/app.js',
     ext: 'js',

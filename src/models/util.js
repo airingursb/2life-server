@@ -5,10 +5,10 @@ export const findAll = async (model, condition, include) => {
   })
 }
 
-export const findOne = async (model, condition) => {
+export const findOne = async (model, condition, option) => {
   return await model.findOne({
     where: condition
-  })
+  }, option)
 }
 
 export const create = async (model, data) => {

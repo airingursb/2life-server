@@ -30,5 +30,5 @@ export const md5Pwd = (password) => {
 }
 
 export const checkToken = function (uid, timestamp, token) {
-  return token === md5(uid.toString() + timestamp.toString() + KEY)
+  return token === md5Pwd(uid.toString() + timestamp.toString() + KEY)
 }

@@ -1,43 +1,34 @@
-var express = require('express');
-var router = express.Router();
+import express from 'express'
 
-var UserModel = require('../models').User;
-var NoteModel = require('../models').Note;
-var CodeModel = require('../models').Code;
-var FeedbackModel = require('../models').Feedback;
-var MessageModel = require('../models').Message;
+import {User, Code, Message} from '../models'
+import * as Model from '../models/util'
 
-var sha1 = require('sha1');
-var md5 = require('md5');
-var https = require('https');
-var querystring = require('querystring');
+import md5 from 'md5'
 
-var MESSAGE = require('./config').MESSAGE;
-var KEY = require('./config').KEY;
-var log = require('./config').log;
-var YUNPIAN_APIKEY = require('./config').YUNPIAN_APIKEY;
+import https from 'https'
+import querystring from 'querystring'
+
+import {MESSAGE, KEY, YUNPIAN_APIKEY, checkToken, md5Pwd} from '../config'
+
+const router = express.Router()
 
 /* users/code */
-router.post('/code', function (req, res, next) {
+router.post('/code', (req, res) => {
 
-  var timestamp = new Date().getTime();
-  if (req.body.user_account == undefined || req.body.user_account == ''
-    || req.body.timestamp == undefined || req.body.timestamp == '') {
-    res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
-    return;
-  }
+  const {user_account} = req.body
+  const now = new Date().getTime()
 
-  var code = Math.floor(Math.random() * 8999 + 1000)
+  const code = Math.floor(Math.random() * 8999 + 1000)
 
-  var postData = {
-    mobile: req.body.user_account,
+  const postData = {
+    mobile: user_account,
     text: '【双生APP】您的验证码是' + code,
     apikey: YUNPIAN_APIKEY
-  };
+  }
 
-  var content = querystring.stringify(postData);
+  const content = querystring.stringify(postData)
 
-  var options = {
+  const options = {
     host: 'sms.yunpian.com',
     path: '/v2/sms/single_send.json',
     method: 'POST',
@@ -47,495 +38,287 @@ router.post('/code', function (req, res, next) {
       'Content-Type': 'application/x-www-form-urlencoded',
       'Content-Length': content.length
     }
-  };
+  }
 
-  var model = {
-    user_account: req.body.user_account,
-    code: code,
-    timestamp: timestamp,
+  const model = {
+    user_account,
+    code,
+    timestamp: now,
     used: false
   }
 
-  CodeModel.findAll({
-    where: {
-      user_account: req.body.user_account,
-      used: false
-    }
-  }).then(function (results) {
+  const sendMsg = async () => {
+    const req = https.request(options, (res) => {
+      res.setEncoding('utf8')
+    })
+    req.write(postContent)
+    req.end()
+    return true
+  }
+
+  const response = async () => {
+    const results = await Model.findAll(Code, {user_account, used: false})
     if (results[0] !== undefined) {
-      console.log('连续请求:' + (timestamp - results[0].timestamp));
-      if (timestamp - results[0].timestamp < 600000) {
-        res.json({status: 5000, msg: MESSAGE.REQUEST_ERROR});
-        return;
+      if (now - results[0].timestamp < 600000) {
+        return res.json({code: 501, msg: MESSAGE.REQUEST_ERROR})
       }
     }
-    CodeModel.create(model).then(function () {
-      return res.json({status: 0, msg: MESSAGE.SUCCESS});
-    }).catch(next);
+    await Model.create(Code, model)
+    await sendMsg()
+    return res.json({code: 200, msg: MESSAGE.SUCCESS, timestamp: now})
+  }
 
-    var req = https.request(options, function (res) {
-      res.setEncoding('utf8');
-      res.on('data', function (chunk) {
-        console.log(JSON.parse(chunk));
-      });
-      res.on('end', function () {
-        console.log('over');
-      });
-    });
-    req.write(content);
-    req.end();
-  })
-
+  response()
 })
 
 /* users/register */
-router.post('/register', function (req, res, next) {
+router.post('/register', (req, res) => {
 
-  var timestamp = new Date().getTime();
+  const {user_account, user_password, user_name, code, timestamp} = req.body
 
-  if (req.body.user_account == undefined || req.body.user_account == ''
-    || req.body.user_password == undefined || req.body.user_password == ''
-    || req.body.user_name == undefined || req.body.user_name == ''
-    || req.body.code == undefined || req.body.code == ''
-    || req.body.timestamp == undefined || req.body.timestamp == '') {
-    res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
-    return;
+  const findCode = async () => {
+    return await Model.findOne(Code, {user_account, code, timestamp, used: false})
   }
 
-  CodeModel.findOne({
-    where: {
-      user_account: req.body.user_account,
-      code: req.body.code,
-      used: false,
-      timestamp: req.body.timestamp
-    }
-  }).then(function (result) {
-    if (!result) {
-      UserModel.findOne({
-        where: {
-          user_account: req.body.user_account
+  const response = async () => {
+    const code = await findCode()
+    if (code) {
+      const user = await Model.findOne(User, {user_account})
+      if (user) {
+        return res.json({code: 1004, msg: MESSAGE.USER_ALREADY_EXIST})
+      } else {
+        const userinfo = {
+          user_account,
+          user_password: md5(user_password),
+          user_sex: 0,
+          user_name,
+          user_other_id: -1,
+          user_code: '0' + Math.floor((Math.random() * 89999 + 10000)),
+          user_message: 1,
+          user_face: 'https://airing.ursb.me/image/twolife/male.png'
         }
-      }).then(function (result) {
-        if (!result) {
-          var user = {
-            user_account: req.body.user_account,
-            user_password: md5(req.body.user_password),
-            user_sex: 0,
-            user_name: req.body.user_name,
-            user_other_id: -1,
-            user_code: '0' + Math.floor((Math.random() * 89999 + 10000)),
-            user_message: 1,
-            user_face: 'https://airing.ursb.me/image/twolife/male.png'
-          }
-          UserModel.create(user).then(function () {
-            return res.json({status: 0, data: user, msg: MESSAGE.SUCCESS});
-          }).catch(next);
-        } else {
-          return res.json({status: 1004, msg: MESSAGE.USER_ALREADY_EXIST});
-        }
-      })
-    } else {
-      return res.json({status: 1003, msg: MESSAGE.CODE_ERROR});
+        await Model.create(User, userinfo)
+        return res.json({code: 0, data: user, msg: MESSAGE.SUCCESS})
+      }
     }
-  });
-});
+    return res.json({code: 1003, msg: MESSAGE.CODE_ERROR})
+  }
+
+  response()
+})
 
 /* users/login */
-router.post('/login', function (req, res, next) {
+router.post('/login', (req, res) => {
 
-  var timestamp = new Date().getTime();
+  const {user_account, user_password} = req.body
 
-  if (req.body.user_account == undefined || req.body.user_account == ''
-    || req.body.user_password == undefined || req.body.user_password == '') {
-    res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
-    return;
+  const response = async () => {
+    const user = await Model.findOne(User, {user_account})
+    if (!user)
+      return res.json({code: 1002, msg: MESSAGE.USER_NOT_EXIST})
+
+    if (user.user_password !== md5(user_password))
+      return res.json({code: 1003, msg: MESSAGE.PASSWORD_ERROR})
+
+    const token = md5Pwd((user.id).toString() + Date.now().toString() + KEY)
+
+    return res.json({
+      code: 0,
+      data: {...user, password: 0, token, timestamp: Date.now()},
+      msg: MESSAGE.SUCCESS
+    })
   }
 
-  var user = {
-    user_account: req.body.user_account,
-    user_password: md5(req.body.user_password)
-  };
-  UserModel.findOne({
-    where: {
-      user_account: user.user_account
-    }
-  }).then(function (user) {
-    if (!user) {
-      return res.json({status: 1002, msg: MESSAGE.USER_NOT_EXIST});
-    }
-    if (user.user_password !== md5(req.body.user_password)) {
-      return res.json({status: 1003, msg: MESSAGE.PASSWORD_ERROR});
-    }
-    var token = md5((user.id).toString() + timestamp.toString() + KEY);
-    var userData = {
-      uid: user.id,
-      user_name: user.user_name,
-      user_sex: user.user_sex,
-      user_face: user.user_face,
-      token: token,
-      user_other_id: user.user_other_id,
-      created_at: user.createdAt,
-      updated_at: timestamp,
-      timestamp: timestamp,
-      user_code: user.user_code,
-      user_message: user.user_message
-    };
-    res.json({status: 0, data: userData, msg: MESSAGE.SUCCESS});
-  });
-});
+  response()
+})
 
 /* users/check */
-router.post('/check', function (req, res, next) {
+router.post('/check', (req, res) => {
+  const {uid, timestamp, token} = req.body
 
-  var timestamp = new Date().getTime();
-
-  if (req.body.uid == undefined || req.body.uid == ''
-    || req.body.timestamp == undefined || req.body.timestamp == ''
-    || req.body.token == undefined || req.body.token == '') {
-    res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
-    return;
-  }
-
-  if (md5(req.body.uid + req.body.timestamp + KEY) == req.body.token) {
-    res.json({status: 0, msg: MESSAGE.SUCCESS});
-    return;
-  } else {
-    res.json({status: 4000, msg: MESSAGE.USER_NOT_LOGIN});
-    return;
-  }
-});
+  if (checkToken(uid, timestamp, token))
+    return res.json({code: 0, msg: MESSAGE.SUCCESS})
+  else
+    return res.json({code: 4000, msg: MESSAGE.USER_NOT_LOGIN})
+})
 
 /* users/user */
-router.post('/user', function (req, res, next) {
+router.post('/user', (req, res) => {
 
-  var timestamp = new Date().getTime();
+  // TODO: 校验 TOKEN
+  const {user_id} = req.body
 
-  if (req.body.user_id == undefined || req.body.user_id == '') {
-    res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
-    return;
+  const response = async () => {
+    const user = await Model.findOne(User, {id: user_id})
+    if (!user)
+      return res.json({code: 1002, msg: MESSAGE.USER_NOT_EXIST})
+    return res.json({
+      code: 0,
+      data: {...user, password: 0, uid: user.id},
+      msg: MESSAGE.SUCCESS
+    })
   }
 
-  UserModel.findOne({
-    where: {
-      id: req.body.user_id
-    }
-  }).then(function (user) {
-    if (!user) {
-      res.json({status: 1002, msg: MESSAGE.USER_NOT_EXIST});
-      return;
-    }
-    var userData = {
-      uid: user.id,
-      user_name: user.user_name,
-      user_sex: user.user_sex,
-      user_face: user.user_face,
-      user_id: user.user_other_id,
-      created_at: user.createdAt,
-      user_code: user.user_code
-    };
-    res.json({status: 0, data: userData, msg: MESSAGE.SUCCESS});
-  }).catch(next);
-});
+  response()
+})
 
 /* users/update */
-router.post('/update', function (req, res, next) {
+router.post('/update', (req, res) => {
 
-  var timestamp = new Date().getTime();
+  const {uid, timestamp, token, user_sex, user_name, user_face} = req.body
 
-  if (req.body.uid == undefined || req.body.uid == ''
-    || req.body.timestamp == undefined || req.body.timestamp == ''
-    || req.body.token == undefined || req.body.token == ''
-    || req.body.user_sex == undefined || req.body.user_sex == ''
-    || req.body.user_name == undefined || req.body.user_name == ''
-    || req.body.user_face == undefined || req.body.user_face == '') {
-    res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
-    return;
+  if (!checkToken(uid, timestamp, token))
+    return res.jsonp({code: 500, msg: MESSAGE.TOKEN_ERROR})
+
+  const response = async () => {
+    await Model.update(User, {user_name, user_sex, user_face}, {id: user_id})
+    const user = await Model.findOne(User, {id: user_id})
+    return res.json({
+      code: 0,
+      data: {...user, password: 0, uid: user.id, token, timestamp},
+      msg: MESSAGE.SUCCESS
+    })
   }
 
-  UserModel.update({
-    user_name: req.body.user_name,
-    user_sex: req.body.user_sex,
-    user_face: req.body.user_face
-  }, {
-    where: {
-      id: req.body.uid
-    }
-  }).then(function () {
-    UserModel.findOne({
-      where: {
-        id: req.body.uid
-      }
-    }).then(function (user) {
-      var userData = {
-        uid: user.id,
-        user_name: user.user_name,
-        user_sex: user.user_sex,
-        user_face: user.user_face,
-        token: req.body.token,
-        user_other_id: user.user_other_id,
-        created_at: user.createdAt,
-        updated_at: timestamp,
-        timestamp: req.body.timestamp,
-        user_code: user.user_code
-      };
-      res.json({status: 0, data: userData, msg: MESSAGE.SUCCESS});
-      return;
-    })
-  }).catch(next);
-});
+  response()
+})
 
 /* users/close_connect */
-router.post('/close_connect', function (req, res, next) {
+router.post('/close_connect', (req, res) => {
 
-  var timestamp = new Date().getTime();
+  const {uid, timestamp, token, user_other_id} = req.body
 
-  if (req.body.uid == undefined || req.body.uid == ''
-    || req.body.timestamp == undefined || req.body.timestamp == ''
-    || req.body.token == undefined || req.body.token == ''
-    || req.body.user_other_id == undefined || req.body.user_other_id == '') {
-    res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
-    return;
+  if (!checkToken(uid, timestamp, token))
+    return res.jsonp({code: 500, msg: MESSAGE.TOKEN_ERROR})
+
+  const response = async () => {
+    await Model.update(User, {user_other_id: -404}, {id: user_id})
+    if (user_other_id !== -1) {
+      await Model.update(User, {user_other_id: -1}, {id: user_other_id})
+      return res.json({code: 0, msg: MESSAGE.SUCCESS})
+    }
+    return res.json({code: 0, msg: MESSAGE.SUCCESS})
   }
 
-  UserModel.update({
-    user_other_id: -404,
-  }, {
-    where: {
-      id: req.body.uid
-    }
-  }).then(function (user) {
-    if (req.body.user_other_id !== -1) {
-      UserModel.update({
-        user_other_id: -1,
-      }, {
-        where: {
-          id: req.body.user_other_id
-        }
-      }).then(function (user) {
-        res.json({status: 0, msg: MESSAGE.SUCCESS});
-        return;
-      })
-    } else {
-      res.json({status: 0, msg: MESSAGE.SUCCESS});
-      return;
-    }
-  }).catch(next);
-});
-
+  response()
+})
 
 /* users/connect */
-router.post('/connect', function (req, res, next) {
+router.post('/connect', (req, res) => {
 
-  var timestamp = new Date().getTime();
+  const {uid, timestamp, token, sex} = req.body
 
-  if (req.body.uid == undefined || req.body.uid == ''
-    || req.body.timestamp == undefined || req.body.timestamp == ''
-    || req.body.token == undefined || req.body.token == ''
-    || req.body.sex == undefined || req.body.sex == '') {
-    res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
-    return;
+  if (!checkToken(uid, timestamp, token))
+    return res.jsonp({code: 500, msg: MESSAGE.TOKEN_ERROR})
+
+  const response = async () => {
+    const users = await Model.findAll(User, {user_sex: sex === 0 ? 1 : 0, user_other_id: -1})
+    if (!users[0])
+      return res.json({code: 1001, msg: MESSAGE.USER_NOT_EXIST})
+    const user = users[Math.floor(Math.random() * users.length)]
+    await Model.update(User, {user_other_id: user.id}, {id: uid})
+    await Model.update(User, {user_other_id: uid}, {id: user.id})
+    return res.json({
+      code: 0,
+      msg: MESSAGE.SUCCESS,
+      data: {...user, password: 0, user_id: user.user_other_id, uid: user.id}
+    })
   }
 
-  UserModel.findAll({
-    where: {
-      user_sex: req.body.sex == 0 ? 1 : 0,
-      user_other_id: -1
-    }
-  }).then(function (users) {
-    if (!users[0]) {
-      return res.json({status: 1001, msg: MESSAGE.USER_NOT_EXIST});
-    }
-    var user = users[Math.floor(Math.random() * users.length)]
-    UserModel.update({
-      user_other_id: user.id
-    }, {
-      where: {
-        id: req.body.uid
-      }
-    }).then(function () {
-      UserModel.update({
-        user_other_id: req.body.uid
-      }, {
-        where: {
-          id: user.id
-        }
-      }).then(function () {
-        var userData = {
-          uid: user.id,
-          user_name: user.user_name,
-          user_sex: user.user_sex,
-          user_face: user.user_face,
-          user_id: user.user_other_id,
-          user_code: user.user_code
-        };
-        return res.json({status: 0, data: userData, msg: MESSAGE.SUCCESS});
-      })
-    })
-  }).catch(next);
-});
+  response()
+})
 
 /* users/connect_by_id */
-router.post('/connect_by_id', function (req, res, next) {
+router.post('/connect_by_id', (req, res) => {
 
-  var timestamp = new Date().getTime();
+  const {uid, timestamp, token, sex, code} = req.body
 
-  if (req.body.uid == undefined || req.body.uid == ''
-    || req.body.timestamp == undefined || req.body.timestamp == ''
-    || req.body.token == undefined || req.body.token == ''
-    || req.body.sex == undefined || req.body.sex == ''
-    || req.body.code == undefined || req.body.code == '') {
-    res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
-    return;
+  if (!checkToken(uid, timestamp, token))
+    return res.jsonp({code: 500, msg: MESSAGE.TOKEN_ERROR})
+
+  const response = async () => {
+    const users = await Model.findAll(User, {user_code: code, user_sex: sex === 0 ? 1 : 0, user_other_id: -1})
+    if (!users[0])
+      return res.json({code: 1001, msg: MESSAGE.USER_NOT_EXIST})
+    const user = users[Math.floor(Math.random() * users.length)]
+    await Model.update(User, {user_other_id: user.id}, {id: uid})
+    await Model.update(User, {user_other_id: uid}, {id: user.id})
+    return res.json({
+      code: 0,
+      msg: MESSAGE.SUCCESS,
+      data: {...user, password: 0, user_id: user.user_other_id, uid: user.id}
+    })
   }
 
-  UserModel.findAll({
-    where: {
-      user_code: req.body.code,
-      user_sex: req.body.sex == 0 ? 1 : 0,
-      user_other_id: -1
-    }
-  }).then(function (users) {
-    if (!users[0]) {
-      res.json({status: 1001, msg: MESSAGE.USER_NOT_EXIST});
-      return;
-    }
-    var user = users[0];
-    UserModel.update({
-      user_other_id: user.id
-    }, {
-      where: {
-        id: req.body.uid,
-      }
-    }).then(function (result) {
-      UserModel.update({
-        user_other_id: req.body.uid
-      }, {
-        where: {
-          id: user.id
-        }
-      }).then(function () {
-        var userData = {
-          uid: user.id,
-          user_name: user.user_name,
-          user_sex: user.user_sex,
-          user_face: user.user_face,
-          user_id: user.user_other_id,
-          created_at: user.createdAt,
-          user_code: user.user_code
-        };
-        res.json({status: 0, data: userData, msg: MESSAGE.SUCCESS});
-        return;
-      });
-    });
-  }).catch(next);
-  return;
-});
+  response()
+})
 
 /* users/disconnect */
-router.post('/disconnect', function (req, res, next) {
+router.post('/disconnect', (req, res) => {
 
-  var timestamp = new Date().getTime();
+  const {uid, timestamp, token} = req.body
 
-  if (req.body.uid == undefined || req.body.uid == ''
-    || req.body.timestamp == undefined || req.body.timestamp == ''
-    || req.body.token == undefined || req.body.token == ''
-    || req.body.user_id == undefined || req.body.user_id == '') {
-    res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
-    return;
+  if (!checkToken(uid, timestamp, token))
+    return res.jsonp({code: 500, msg: MESSAGE.TOKEN_ERROR})
+
+  const response = async () => {
+    const users = await Model.findAll(User, {user_other_id: uid})
+
+    const ids = await users.map(user => {
+      return user.dataValues.id
+    })
+    await Model.update(User, {user_other_id: -1}, {id: ids})
+    return res.json({code: 0, msg: MESSAGE.SUCCESS})
   }
 
-  UserModel.findAll({
-    where: {
-      user_other_id: req.body.uid
-    }
-  }).then(function (users) {
-    var ids = [req.body.uid]
-    users.forEach(function (o) {
-      ids.push(o.id)
-    })
-    UserModel.update({
-      user_other_id: -1
-    }, {
-      where: {
-        id: ids
-      }
-    }).then(function (result) {
-      return res.json({status: 0, msg: MESSAGE.SUCCESS});
-    }).catch(next);
-  })
-
-});
+  response()
+})
 
 /* users/feedback */
-router.post('/feedback', function (req, res, next) {
+router.post('/feedback', (req, res) => {
 
-  var timestamp = new Date().getTime();
+  const {uid, timestamp, token, contact, content} = req.body
 
-  if (req.body.uid == undefined || req.body.uid == ''
-    || req.body.timestamp == undefined || req.body.timestamp == ''
-    || req.body.token == undefined || req.body.token == ''
-    || req.body.contact == undefined || req.body.contact == ''
-    || req.body.content == undefined || req.body.content == '') {
-    res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
-    return;
+  if (!checkToken(uid, timestamp, token))
+    return res.jsonp({code: 500, msg: MESSAGE.TOKEN_ERROR})
+
+  const response = async () => {
+    const user = await Model.findOne(User, {id: uid})
+    if (!user)
+      return res.json({code: 1001, msg: MESSAGE.USER_NOT_EXIST})
+    user.createFeedback({contact, content})
+    return res.json({code: 0, msg: MESSAGE.SUCCESS})
   }
 
-  var feedback = {
-    contact: req.body.contact,
-    content: req.body.content
-  };
-  UserModel.findOne({
-    where: {
-      id: req.body.uid
-    }
-  }).then(function (user) {
-    if (!user) {
-      return res.json({status: 1001, msg: MESSAGE.USER_NOT_EXIST});
-    }
-    user.createFeedback(feedback);
-    res.json({status: 0, msg: MESSAGE.SUCCESS});
-  }).catch(next);
-});
+  response()
+})
 
 /* users/show_notification */
-router.post('/show_notification', function (req, res, next) {
+router.post('/show_notification', (req, res) => {
 
-  var timestamp = new Date().getTime();
+  const {uid, timestamp, token} = req.body
 
-  if (req.body.uid == undefined || req.body.uid == ''
-    || req.body.timestamp == undefined || req.body.timestamp == ''
-    || req.body.token == undefined || req.body.token == '') {
-    res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR});
-    return;
+  if (!checkToken(uid, timestamp, token))
+    return res.jsonp({code: 500, msg: MESSAGE.TOKEN_ERROR})
+
+  const response = async () => {
+    const messages = await Model.findOne(Message, {}, {'order': 'message_date DESC'})
+    const data = await messages.map(message => {
+      return {
+        ...message.dataValues,
+        time: message.dataValues.message_date,
+        title: message.dataValues.message_date,
+        content: message.dataValues.message_content,
+        image: message.dataValues.message_image,
+        type: message.dataValues.message_type,
+        url: message.dataValues.message_url,
+      }
+    })
+    await Model.update(User, {user_message: 0}, {id: uid})
+    return res.json({code: 0, msg: MESSAGE.SUCCESS, data})
   }
 
-  MessageModel.findAll({
-    'order': "message_date DESC"
-  }).then(function (result) {
-    var messages = [];
+  response()
+})
 
-    result.forEach(function (message) {
-      var messageData = {};
-      messageData.id = message.id;
-      messageData.time = message.message_date;
-      messageData.title = message.message_title;
-      messageData.content = message.message_content;
-      messageData.image = message.message_image;
-      messageData.type = message.message_type;
-      messageData.url = message.message_url;
-      messages.push(messageData);
-    })
-    UserModel.update({
-      user_message: 0
-    }, {
-      where: {
-        id: req.body.uid
-      }
-    }).then(function () {
-      res.json({status: 0, msg: MESSAGE.SUCCESS, data: messages})
-      return;
-    })
-  })
-});
-
-module.exports = router;
+module.exports = router

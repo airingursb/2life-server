@@ -23,7 +23,13 @@ const uptoken = (bucket, key) => {
 
 /* 获取七牛token */
 router.post('/qiniu_token', (req, res) => {
+
   const {filename} = req.body
+
+  if (typeof filename === 'undefined' || filename === null) {
+    return res.json({code: 400, msg: MESSAGE.PARAMETER_ERROR})
+  }
+
   const qiniu_token = uptoken(BUCKET, filename)
 
   return res.json({code: 0, qiniu_token, msg: MESSAGE.SUCCESS})
@@ -33,6 +39,16 @@ router.post('/qiniu_token', (req, res) => {
 router.post('/push_message', (req, res) => {
 
   const {user, password, type, title, content, image, url} = req.body
+
+  if (typeof user === 'undefined' || user === null
+    || typeof password === 'undefined' || password === null
+    || typeof type === 'undefined' || type === null
+    || typeof title === 'undefined' || title === null
+    || typeof content === 'undefined' || content === null
+    || typeof image === 'undefined' || image === null
+    || typeof url === 'undefined' || url === null) {
+    return res.json({code: 400, msg: MESSAGE.PARAMETER_ERROR})
+  }
 
   if (user !== ADMIN_USER && password !== ADMIN_PASSWORD)
     return res.json({code: 3000, msg: MESSAGE.ADMIN_ERROR})
@@ -57,7 +73,13 @@ router.post('/push_message', (req, res) => {
 
 /* 后台获取日记 */
 router.post('/get_all_note', (req, res) => {
+
   const {admin, password} = req.body
+
+  if (typeof admin === 'undefined' || admin === null
+    || typeof password === 'undefined' || password === null) {
+    return res.json({code: 400, msg: MESSAGE.PARAMETER_ERROR})
+  }
 
   const response = async () => {
     const notes = await Model.findAll(Note, {}, [User])

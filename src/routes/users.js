@@ -16,6 +16,9 @@ const router = express.Router()
 router.post('/code', (req, res) => {
 
   const {user_account} = req.body
+  if (typeof user_account === 'undefined' || user_account === null) {
+    return res.json({code: 400, msg: MESSAGE.PARAMETER_ERROR})
+  }
   const now = new Date().getTime()
 
   const code = Math.floor(Math.random() * 8999 + 1000)
@@ -76,6 +79,14 @@ router.post('/register', (req, res) => {
 
   const {user_account, user_password, user_name, code, timestamp} = req.body
 
+  if (typeof user_account === 'undefined' || user_account === null
+    || typeof user_password === 'undefined' || user_password === null
+    || typeof user_name === 'undefined' || user_name === null
+    || typeof code === 'undefined' || code === null
+    || typeof timestamp === 'undefined' || timestamp === null) {
+    return res.json({code: 400, msg: MESSAGE.PARAMETER_ERROR})
+  }
+
   const findCode = async () => {
     return await Model.findOne(Code, {user_account, code, timestamp, used: false})
   }
@@ -112,6 +123,11 @@ router.post('/login', (req, res) => {
 
   const {user_account, user_password} = req.body
 
+  if (typeof user_account === 'undefined' || user_account === null
+    || typeof user_password === 'undefined' || user_password === null) {
+    return res.json({code: 400, msg: MESSAGE.PARAMETER_ERROR})
+  }
+
   const response = async () => {
     const user = await Model.findOne(User, {user_account})
     if (!user)
@@ -136,6 +152,12 @@ router.post('/login', (req, res) => {
 router.post('/check', (req, res) => {
   const {uid, timestamp, token} = req.body
 
+  if (typeof uid === 'undefined' || uid === null
+    || typeof token === 'undefined' || token === null
+    || typeof timestamp === 'undefined' || timestamp === null) {
+    return res.json({code: 400, msg: MESSAGE.PARAMETER_ERROR})
+  }
+
   if (checkToken(uid, timestamp, token))
     return res.json({code: 0, msg: MESSAGE.SUCCESS})
   else
@@ -147,6 +169,10 @@ router.post('/user', (req, res) => {
 
   // TODO: 校验 TOKEN
   const {user_id} = req.body
+
+  if (typeof user_id === 'undefined' || user_id === null) {
+    return res.json({code: 400, msg: MESSAGE.PARAMETER_ERROR})
+  }
 
   const response = async () => {
     const user = await Model.findOne(User, {id: user_id})
@@ -166,6 +192,15 @@ router.post('/user', (req, res) => {
 router.post('/update', (req, res) => {
 
   const {uid, timestamp, token, user_sex, user_name, user_face} = req.body
+
+  if (typeof uid === 'undefined' || uid === null
+    || typeof token === 'undefined' || token === null
+    || typeof timestamp === 'undefined' || timestamp === null
+    || typeof user_sex === 'undefined' || user_sex === null
+    || typeof user_name === 'undefined' || user_name === null
+    || typeof user_face === 'undefined' || user_face === null) {
+    return res.json({code: 400, msg: MESSAGE.PARAMETER_ERROR})
+  }
 
   if (!checkToken(uid, timestamp, token))
     return res.jsonp({code: 500, msg: MESSAGE.TOKEN_ERROR})
@@ -188,6 +223,13 @@ router.post('/close_connect', (req, res) => {
 
   const {uid, timestamp, token, user_other_id} = req.body
 
+  if (typeof uid === 'undefined' || uid === null
+    || typeof token === 'undefined' || token === null
+    || typeof timestamp === 'undefined' || timestamp === null
+    || typeof user_other_id === 'undefined' || user_other_id === null) {
+    return res.json({code: 400, msg: MESSAGE.PARAMETER_ERROR})
+  }
+
   if (!checkToken(uid, timestamp, token))
     return res.jsonp({code: 500, msg: MESSAGE.TOKEN_ERROR})
 
@@ -207,6 +249,13 @@ router.post('/close_connect', (req, res) => {
 router.post('/connect', (req, res) => {
 
   const {uid, timestamp, token, sex} = req.body
+
+  if (typeof uid === 'undefined' || uid === null
+    || typeof token === 'undefined' || token === null
+    || typeof timestamp === 'undefined' || timestamp === null
+    || typeof sex === 'undefined' || sex === null) {
+    return res.json({code: 400, msg: MESSAGE.PARAMETER_ERROR})
+  }
 
   if (!checkToken(uid, timestamp, token))
     return res.jsonp({code: 500, msg: MESSAGE.TOKEN_ERROR})
@@ -233,6 +282,14 @@ router.post('/connect_by_id', (req, res) => {
 
   const {uid, timestamp, token, sex, code} = req.body
 
+  if (typeof uid === 'undefined' || uid === null
+    || typeof token === 'undefined' || token === null
+    || typeof timestamp === 'undefined' || timestamp === null
+    || typeof sex === 'undefined' || sex === null
+    || typeof code === 'undefined' || code === null) {
+    return res.json({code: 400, msg: MESSAGE.PARAMETER_ERROR})
+  }
+
   if (!checkToken(uid, timestamp, token))
     return res.jsonp({code: 500, msg: MESSAGE.TOKEN_ERROR})
 
@@ -258,6 +315,12 @@ router.post('/disconnect', (req, res) => {
 
   const {uid, timestamp, token} = req.body
 
+  if (typeof uid === 'undefined' || uid === null
+    || typeof token === 'undefined' || token === null
+    || typeof timestamp === 'undefined' || timestamp === null) {
+    return res.json({code: 400, msg: MESSAGE.PARAMETER_ERROR})
+  }
+
   if (!checkToken(uid, timestamp, token))
     return res.jsonp({code: 500, msg: MESSAGE.TOKEN_ERROR})
 
@@ -279,6 +342,14 @@ router.post('/feedback', (req, res) => {
 
   const {uid, timestamp, token, contact, content} = req.body
 
+  if (typeof uid === 'undefined' || uid === null
+    || typeof token === 'undefined' || token === null
+    || typeof timestamp === 'undefined' || timestamp === null
+    || typeof contact === 'undefined' || contact === null
+    || typeof content === 'undefined' || content === null) {
+    return res.json({code: 400, msg: MESSAGE.PARAMETER_ERROR})
+  }
+
   if (!checkToken(uid, timestamp, token))
     return res.jsonp({code: 500, msg: MESSAGE.TOKEN_ERROR})
 
@@ -297,6 +368,12 @@ router.post('/feedback', (req, res) => {
 router.post('/show_notification', (req, res) => {
 
   const {uid, timestamp, token} = req.body
+
+  if (typeof uid === 'undefined' || uid === null
+    || typeof token === 'undefined' || token === null
+    || typeof timestamp === 'undefined' || timestamp === null) {
+    return res.json({code: 400, msg: MESSAGE.PARAMETER_ERROR})
+  }
 
   if (!checkToken(uid, timestamp, token))
     return res.jsonp({code: 500, msg: MESSAGE.TOKEN_ERROR})

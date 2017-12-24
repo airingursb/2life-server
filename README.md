@@ -6,6 +6,13 @@
 * para: user_account, user_name, user_password, user_sex
 * response: status, msg, uid, token, timestamp
 
+接受参数：
+
+|参数名|含义|例子|
+|:--:|:--:|:--:|
+|s|s|s|
+
+
 ## 登录
 
 * url: users/login

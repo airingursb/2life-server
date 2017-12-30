@@ -138,9 +138,14 @@ router.post('/login', (req, res) => {
 
     const token = md5Pwd((user.id).toString() + Date.now().toString() + KEY)
 
+    let partner = {}
+    if (user.user_other_id !== -1 && user.user_other_id !== -404)
+      partner = await Model.findOne(User, {id: user.user_other_id})
+
     return res.json({
       code: 0,
       data: {...user.dataValues, user_password: 0, uid: user.id, token, timestamp: Date.now()},
+      partner: {...partner.dataValues, user_password: 0},
       msg: MESSAGE.SUCCESS
     })
   }
@@ -180,7 +185,7 @@ router.post('/user', (req, res) => {
       return res.json({code: 1002, msg: MESSAGE.USER_NOT_EXIST})
     return res.json({
       code: 0,
-      data: {...user, password: 0, uid: user.id},
+      data: {...user, user_password: 0},
       msg: MESSAGE.SUCCESS
     })
   }
@@ -210,7 +215,7 @@ router.post('/update', (req, res) => {
     const user = await Model.findOne(User, {id: user_id})
     return res.json({
       code: 0,
-      data: {...user, password: 0, uid: user.id, token, timestamp},
+      data: {...user, user_password: 0, uid: user.id, token, timestamp},
       msg: MESSAGE.SUCCESS
     })
   }
@@ -270,7 +275,7 @@ router.post('/connect', (req, res) => {
     return res.json({
       code: 0,
       msg: MESSAGE.SUCCESS,
-      data: {...user, password: 0, user_id: user.user_other_id, uid: user.id}
+      data: {...user, user_password: 0, user_id: user.user_other_id}
     })
   }
 
@@ -303,7 +308,7 @@ router.post('/connect_by_id', (req, res) => {
     return res.json({
       code: 0,
       msg: MESSAGE.SUCCESS,
-      data: {...user, password: 0, user_id: user.user_other_id, uid: user.id}
+      data: {...user, user_password: 0, user_id: user.user_other_id}
     })
   }
 

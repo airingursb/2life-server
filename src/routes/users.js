@@ -140,7 +140,7 @@ router.post('/login', (req, res) => {
 
     return res.json({
       code: 0,
-      data: {...user, password: 0, token, timestamp: Date.now()},
+      data: {...user.dataValues, user_password: 0, uid: user.id, token, timestamp: Date.now()},
       msg: MESSAGE.SUCCESS
     })
   }

@@ -3,7 +3,7 @@ import express from 'express'
 import {User, Note} from '../models'
 import * as Model from '../models/util'
 
-import {MESSAGE, checkToken} from '../config'
+import {MESSAGE, validate} from '../config'
 
 const router = express.Router()
 
@@ -23,21 +23,19 @@ router.post('/save', (req, res) => {
     note_images
   } = req.body
 
-  if (typeof uid === 'undefined' || uid === null
-    || typeof token === 'undefined' || token === null
-    || typeof timestamp === 'undefined' || timestamp === null
-    || typeof note_title === 'undefined' || note_title === null
-    || typeof note_content === 'undefined' || note_content === null
-    || typeof note_date === 'undefined' || note_date === null
-    || typeof note_location === 'undefined' || note_location === null
-    || typeof note_longitude === 'undefined' || note_longitude === null
-    || typeof note_latitude === 'undefined' || note_latitude === null
-    || typeof note_images === 'undefined' || note_images === null) {
-    return res.json({code: 400, msg: MESSAGE.PARAMETER_ERROR})
-  }
-
-  if (!checkToken(uid, timestamp, token))
-    return res.json({code: 500, msg: MESSAGE.TOKEN_ERROR})
+  validate(
+    res,
+    true,
+    uid,
+    timestamp,
+    token,
+    note_title,
+    note_content,
+    note_date,
+    note_location,
+    note_longitude,
+    note_latitude,
+    note_images)
 
   const note = {
     note_title: new Buffer(note_title).toString('base64'),
@@ -52,7 +50,7 @@ router.post('/save', (req, res) => {
   const response = async () => {
     const user = await Model.findOne(User, {id: uid})
     await user.createNote(note)
-    return res.json({code: 0, msg: MESSAGE.SUCCESS})
+    return res.json(MESSAGE.OK)
   }
 
   response()
@@ -63,19 +61,11 @@ router.post('/delete', (req, res) => {
 
   const {uid, timestamp, token, note_id} = req.body
 
-  if (typeof uid === 'undefined' || uid === null
-    || typeof token === 'undefined' || token === null
-    || typeof timestamp === 'undefined' || timestamp === null
-    || typeof note_id === 'undefined' || note_id === null) {
-    return res.json({code: 400, msg: MESSAGE.PARAMETER_ERROR})
-  }
-
-  if (!checkToken(uid, timestamp, token))
-    return res.json({code: 500, msg: MESSAGE.TOKEN_ERROR})
+  validate(res, true, uid, timestamp, token, note_id)
 
   const response = async () => {
     await Model.remove(Note, {id: note_id})
-    return res.json({code: 0, msg: MESSAGE.SUCCESS})
+    return res.json(MESSAGE.OK)
   }
 
   response()
@@ -86,16 +76,7 @@ router.post('/show', (req, res) => {
 
   const {uid, timestamp, token, user_id, sex} = req.body
 
-  if (typeof uid === 'undefined' || uid === null
-    || typeof token === 'undefined' || token === null
-    || typeof timestamp === 'undefined' || timestamp === null
-    || typeof user_id === 'undefined' || user_id === null
-    || typeof sex === 'undefined' || sex === null) {
-    return res.json({code: 400, msg: MESSAGE.PARAMETER_ERROR})
-  }
-
-  if (!checkToken(uid, timestamp, token))
-    return res.json({code: 500, msg: MESSAGE.TOKEN_ERROR})
+  validate(res, uid, timestamp, token, user_id, sex)
 
   let condition = {userId: uid}
 
@@ -126,7 +107,7 @@ router.post('/show', (req, res) => {
       return {...note.dataValues}
     })
 
-    return res.json({code: 0, msg: MESSAGE.SUCCESS}, data)
+    return res.json({...MESSAGE.OK, data})
   }
 
   response()

@@ -9,7 +9,8 @@ import {
   BUCKET,
   MESSAGE,
   ADMIN_USER,
-  ADMIN_PASSWORD
+  ADMIN_PASSWORD,
+  validate
 } from '../config/index'
 
 const router = express.Router()
@@ -26,13 +27,11 @@ router.post('/qiniu_token', (req, res) => {
 
   const {filename} = req.body
 
-  if (typeof filename === 'undefined' || filename === null) {
-    return res.json({code: 400, msg: MESSAGE.PARAMETER_ERROR})
-  }
+  validate(res, false, filename)
 
   const qiniu_token = uptoken(BUCKET, filename)
 
-  return res.json({code: 0, qiniu_token, msg: MESSAGE.SUCCESS})
+  return res.json({...MESSAGE.OK, qiniu_token})
 })
 
 /* 后台发送通知 */
@@ -40,18 +39,10 @@ router.post('/push_message', (req, res) => {
 
   const {user, password, type, title, content, image, url} = req.body
 
-  if (typeof user === 'undefined' || user === null
-    || typeof password === 'undefined' || password === null
-    || typeof type === 'undefined' || type === null
-    || typeof title === 'undefined' || title === null
-    || typeof content === 'undefined' || content === null
-    || typeof image === 'undefined' || image === null
-    || typeof url === 'undefined' || url === null) {
-    return res.json({code: 400, msg: MESSAGE.PARAMETER_ERROR})
-  }
+  validate(res, false, user, password, type, title, content, image, url)
 
   if (user !== ADMIN_USER && password !== ADMIN_PASSWORD)
-    return res.json({code: 3000, msg: MESSAGE.ADMIN_ERROR})
+    return res.json(MESSAGE.ADMIN_ERROR)
 
   const message = {
     message_title: title,
@@ -65,7 +56,7 @@ router.post('/push_message', (req, res) => {
   const response = async () => {
     await Model.create(Message, message)
     await Model.update(User, {user_message: 1}, {})
-    return res.json({code: 0, msg: MESSAGE.SUCCESS})
+    return res.json(MESSAGE.OK)
   }
 
   response()
@@ -76,10 +67,7 @@ router.post('/get_all_note', (req, res) => {
 
   const {admin, password} = req.body
 
-  if (typeof admin === 'undefined' || admin === null
-    || typeof password === 'undefined' || password === null) {
-    return res.json({code: 400, msg: MESSAGE.PARAMETER_ERROR})
-  }
+  validate(res, false, admin, password)
 
   const response = async () => {
     const notes = await Model.findAll(Note, {}, [User])
@@ -93,9 +81,8 @@ router.post('/get_all_note', (req, res) => {
           : new Buffer(note.dataValues.note_content, 'base64').toString()
         return {...note.dataValues}
       })
-      return res.json({code: 0, data, msg: MESSAGE.SUCCESS})
+      return res.json({...MESSAGE.OK, data,})
     }
-    return res.json({code: 1000, msg: MESSAGE.PARAMETER_ERROR})
   }
 
   response()

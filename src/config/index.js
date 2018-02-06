@@ -1,17 +1,46 @@
 import md5 from 'md5'
 
 export const MESSAGE = {
-  SUCCESS: '请求成功', // 0
-  TOKEN_ERROR: 'TOKEN错误', // 500
-  PARAMETER_ERROR: '参数错误', // 1000
-  USER_NOT_EXIST: '用户不存在', // 1001
-  PASSWORD_ERROR: '账号密码错误', // 1002
-  CODE_ERROR: '验证码错误', // 1003
-  USER_ALREADY_EXIST: '用户已被注册', // 1004
-  USER_ALREADY_CONNECT: '用户已被匹配', // 1005
-  ADMIN_ERROR: '用户无管理员权限', // 3000
-  USER_NOT_LOGIN: '用户尚未登录', // 4000
-  REQUEST_ERROR: '请求时间间隔过短', // 5000
+  OK: {
+    code: 0,
+    message: '请求成功',
+  },
+  PASSWORD_ERROR: {
+    code: 300,
+    message: '密码错误',
+  },
+  ADMIN_ERROR: {
+    code: 301,
+    message: '管理员密码错误',
+  },
+  USER_EXIST: {
+    code: 302,
+    message: '用户已存在',
+  },
+  TOKEN_ERROR: {
+    code: 403,
+    message: 'TOKEN失效',
+  },
+  USER_NOT_EXIST: {
+    code: 404,
+    message: '用户不存在',
+  },
+  CODE_ERROR: {
+    code: 405,
+    message: '验证码错误',
+  },
+  PARAMETER_ERROR: {
+    code: 422,
+    message: '参数错误',
+  },
+  REQUEST_ERROR: {
+    code: 501,
+    message: '请求失败',
+  },
+  QUICK_REQUEST: {
+    code: 502,
+    message: '请求间隔过短',
+  },
 }
 
 export const KEY = 'airing'
@@ -29,6 +58,20 @@ export const md5Pwd = (password) => {
   return md5(md5(password + salt))
 }
 
-export const checkToken = function (uid, timestamp, token) {
-  return token === md5Pwd(uid.toString() + timestamp.toString() + KEY)
+export const validate = (res, check, ...params) => {
+
+  for (let param of params) {
+    if (typeof param === 'undefined' || param === null) {
+      return res.json(MESSAGE.PARAMETER_ERROR)
+    }
+  }
+
+  if (check) {
+    const uid = params[0]
+    const timestamp = params[1]
+    const token = params[2]
+
+    if (token !== md5Pwd(uid.toString() + timestamp.toString() + KEY))
+      return res.json(MESSAGE.TOKEN_ERROR)
+  }
 }

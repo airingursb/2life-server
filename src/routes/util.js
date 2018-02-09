@@ -17,17 +17,17 @@ const router = express.Router()
 qiniu.conf.ACCESS_KEY = QINIU_ACCESS
 qiniu.conf.SECRET_KEY = QINIU_SECRET
 
-const uptoken = (bucket, key) => {
-  const putPolicy = new qiniu.rs.PutPolicy(bucket + ':' + key)
-  return putPolicy.token()
-}
-
 /* 获取七牛token */
 router.post('/qiniu_token', (req, res) => {
 
   const {filename} = req.body
 
   validate(res, false, filename)
+
+  const uptoken = (bucket, key) => {
+    const putPolicy = new qiniu.rs.PutPolicy(bucket + ':' + key)
+    return putPolicy.token()
+  }
 
   const qiniu_token = uptoken(BUCKET, filename)
 
@@ -81,7 +81,7 @@ router.post('/get_all_note', (req, res) => {
           : new Buffer(note.dataValues.note_content, 'base64').toString()
         return {...note.dataValues}
       })
-      return res.json({...MESSAGE.OK, data,})
+      return res.json({...MESSAGE.OK, data})
     }
   }
 

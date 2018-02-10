@@ -1,6 +1,6 @@
 import express from 'express'
 import qiniu from 'qiniu'
-import {User, Message, Note} from '../models'
+import { User, Message, Note } from '../models'
 import * as Model from '../models/util'
 
 import {
@@ -20,18 +20,18 @@ qiniu.conf.SECRET_KEY = QINIU_SECRET
 /* 获取七牛token */
 router.post('/qiniu_token', (req, res) => {
 
-  const {filename} = req.body
+  const {uid, timestamp, token, filename} = req.body
 
-  validate(res, false, filename)
+  validate(res, true, uid, timestamp, token, filename)
 
   const uptoken = (bucket, key) => {
     const putPolicy = new qiniu.rs.PutPolicy(bucket + ':' + key)
     return putPolicy.token()
   }
 
-  const qiniu_token = uptoken(BUCKET, filename)
+  const data = uptoken(BUCKET, filename)
 
-  return res.json({...MESSAGE.OK, qiniu_token})
+  return res.json({...MESSAGE.OK, data})
 })
 
 /* 后台发送通知 */
@@ -71,7 +71,9 @@ router.post('/get_all_note', (req, res) => {
 
   const response = async () => {
     const notes = await Model.findAll(Note, {}, [User])
+
     if (admin === ADMIN_USER && password === ADMIN_PASSWORD) {
+
       const data = await notes.map(note => {
         note.dataValues.note_title = note.dataValues.note_date < 1497780516378
           ? note.dataValues.note_title
@@ -81,6 +83,7 @@ router.post('/get_all_note', (req, res) => {
           : new Buffer(note.dataValues.note_content, 'base64').toString()
         return {...note.dataValues}
       })
+
       return res.json({...MESSAGE.OK, data})
     }
   }

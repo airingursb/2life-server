@@ -1,9 +1,9 @@
 import express from 'express'
 
-import {User, Note} from '../models'
+import { User, Note } from '../models'
 import * as Model from '../models/util'
 
-import {MESSAGE, validate} from '../config'
+import { MESSAGE, validate } from '../config'
 
 const router = express.Router()
 
@@ -76,7 +76,7 @@ router.post('/show', (req, res) => {
 
   const {uid, timestamp, token, user_id, sex} = req.body
 
-  validate(res, uid, timestamp, token, user_id, sex)
+  validate(res, true, uid, timestamp, token, user_id, sex)
 
   let condition = {userId: uid}
 

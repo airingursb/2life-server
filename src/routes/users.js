@@ -1,6 +1,6 @@
 import express from 'express'
 
-import {User, Code, Message} from '../models'
+import { User, Code, Message } from '../models'
 import * as Model from '../models/util'
 
 import md5 from 'md5'
@@ -8,7 +8,13 @@ import md5 from 'md5'
 import https from 'https'
 import querystring from 'querystring'
 
-import {MESSAGE, KEY, YUNPIAN_APIKEY, validate, md5Pwd} from '../config'
+import { 
+  MESSAGE, 
+  KEY, 
+  YUNPIAN_APIKEY, 
+  validate, 
+  md5Pwd 
+} from '../config'
 
 const router = express.Router()
 

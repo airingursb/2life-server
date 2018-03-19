@@ -1,28 +1,10 @@
 module.exports = (sequelize, DataTypes) => {
-  return sequelize.define(
-    'feedback',
-    {
-      'userId': {
-        'type': DataTypes.INTEGER,
-        'allowNull': false
-      },
-      'contact': {
-        'type': DataTypes.STRING(135),
-        'allowNull': true
-      },
-      'content': {
-        'type': DataTypes.TEXT,
-        'allowNull': false
-      }
-    },
-    {
-      indexes: [
-        {
-          name: 'user_id',
-          method: 'BTREE',
-          fields: ['userId']
-        }
-      ]
-    }
-  )
+  
+  const { TEXT, DOUBLE, INTEGER, STRING } = DataTypes
+
+  return sequelize.define('feedback', {
+    'user_id': INTEGER,
+    'contact': STRING(135),
+    'content': TEXT,
+  })
 }

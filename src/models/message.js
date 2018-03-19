@@ -1,31 +1,13 @@
 module.exports = (sequelize, DataTypes) => {
-  return sequelize.define(
-    'message',
-    {
-      'message_date': {
-        'type': DataTypes.DOUBLE,
-        'allowNull': false
-      },
-      'message_title': {
-        'type': DataTypes.TEXT,
-        'allowNull': true
-      },
-      'message_type': {
-        'type': DataTypes.INTEGER,
-        'allowNull': true
-      },
-      'message_content': {
-        'type': DataTypes.TEXT,
-        'allowNull': true
-      },
-      'message_image': {
-        'type': DataTypes.STRING(125),
-        'allowNull': true
-      },
-      'message_url': {
-        'type': DataTypes.TEXT,
-        'allowNull': true
-      }
-    }
-  )
+
+  const { TEXT, DOUBLE, STRING, INTEGER } = DataTypes
+
+  return sequelize.define('message', {
+    'message_date': DOUBLE
+    'message_title': TEXT
+    'message_type': INTEGER
+    'message_content': TEXT
+    'message_image': STRING(125),
+    'message_url': TEXT
+  })
 }

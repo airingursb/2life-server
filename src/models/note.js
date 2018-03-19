@@ -1,48 +1,15 @@
 module.exports = (sequelize, DataTypes) => {
-  return sequelize.define(
-    'note',
-    {
-      'userId': {
-        'type': DataTypes.INTEGER,
-        'allowNull': false
-      },
-      'note_date': {
-        'type': DataTypes.DOUBLE,
-        'allowNull': false
-      },
-      'note_title': {
-        'type': DataTypes.TEXT,
-        'allowNull': true
-      },
-      'note_content': {
-        'type': DataTypes.TEXT,
-        'allowNull': true
-      },
-      'note_images': {
-        'type': DataTypes.TEXT,
-        'allowNull': true
-      },
-      'note_latitude': {
-        'type': DataTypes.DOUBLE,
-        'allowNull': true
-      },
-      'note_longitude': {
-        'type': DataTypes.DOUBLE,
-        'allowNull': true
-      },
-      'note_location': {
-        'type': DataTypes.STRING(245),
-        'allowNull': true
-      }
-    },
-    {
-      indexes: [
-        {
-          name: 'user_id',
-          method: 'BTREE',
-          fields: ['userId']
-        }
-      ]
-    }
-  )
+
+  const { TEXT, DOUBLE, INTEGER, STRING } = DataTypes
+  
+  return sequelize.define('note', {
+    'user_id': INTEGER,
+    'note_date': DOUBLE,
+    'note_title': TEXT,
+    'note_content': TEXT,
+    'note_images': TEXT,
+    'note_latitude': DOUBLE,
+    'note_longitude': DOUBLE,
+    'note_location': STRING(245),
+  })
 }

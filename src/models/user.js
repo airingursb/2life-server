@@ -1,47 +1,17 @@
 module.exports = (sequelize, DataTypes) => {
-  return sequelize.define(
-    'user',
-    {
-      'user_account': {
-        'type': DataTypes.STRING(45),
-        'allowNull': false
-      },
-      'user_password': {
-        'type': DataTypes.STRING(45),
-        'allowNull': false
-      },
-      'user_name': {
-        'type': DataTypes.STRING(45),
-        'allowNull': false
-      },
-      'user_face': {
-        'type': DataTypes.STRING(125),
-        'allowNull': false
-      },
-      'user_sex': {
-        'type': DataTypes.INTEGER,
-        'allowNull': true
-      },
-      'user_other_id': {
-        'type': DataTypes.INTEGER,
-        'allowNull': true
-      },
-      'user_last_connect': {
-        'type': DataTypes.INTEGER,
-        'allowNull': true
-      },
-      'user_connect_times': {
-        'type': DataTypes.INTEGER,
-        'allowNull': true
-      },
-      'user_code': {
-        'type': DataTypes.STRING(45),
-        'allowNull': true
-      },
-      'user_message': {
-        'type': DataTypes.INTEGER,
-        'allowNull': true
-      },
-    }
-  )
+
+  const { STRING, INTEGER } = DataTypes
+
+  return sequelize.define('user', {
+    'user_account': STRING(45),
+    'user_password': STRING(45),
+    'user_name': STRING(45),
+    'user_face': STRING(125),
+    'user_sex': INTEGER,
+    'user_other_id': INTEGER,
+    'user_last_connect': INTEGER,
+    'user_connect_times': INTEGER,
+    'user_code': STRING(45),
+    'user_message': INTEGER
+  })
 }

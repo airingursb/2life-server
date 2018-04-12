@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
   
-  const { TEXT, DOUBLE, INTEGER, STRING } = DataTypes
+  const { TEXT, INTEGER, STRING } = DataTypes
 
   return sequelize.define('feedback', {
     'user_id': INTEGER,

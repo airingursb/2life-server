@@ -1,17 +1,23 @@
 module.exports = (sequelize, DataTypes) => {
 
-  const { STRING, INTEGER } = DataTypes
+  const { STRING, INTEGER, DOUBLE } = DataTypes
 
   return sequelize.define('user', {
-    'user_account': STRING(45),
-    'user_password': STRING(45),
-    'user_name': STRING(45),
-    'user_face': STRING(125),
-    'user_sex': INTEGER,
+    'code': STRING(45),
+    'account': STRING(45),
+    'password': STRING(45),
+    'name': STRING(45),
+    'sex': INTEGER,
+    'face': STRING(125),
+    'status': INTEGER,
+    'total_notes': INTEGER,
+    'mode': DOUBLE,
+    'last_times': INTEGER,
+    'total_times': INTEGER,
+    'badges': STRING(500),
+    'rate': DOUBLE,
+    'connect_at': DOUBLE,
+    'openid': STRING(45),
     'user_other_id': INTEGER,
-    'user_last_connect': INTEGER,
-    'user_connect_times': INTEGER,
-    'user_code': STRING(45),
-    'user_message': INTEGER
   })
 }

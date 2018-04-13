@@ -8,10 +8,10 @@ const Feedback = db.import('./feedback')
 const Code = db.import('./code')
 const Message = db.import('./message')
 
-User.hasMany(Note, {foreignKey: 'user_id'})
-User.hasMany(Feedback, {foreignKey: 'user_id'})
+User.hasMany(Note, { foreignKey: 'user_id' })
+User.hasMany(Feedback, { foreignKey: 'user_id' })
 
-Award.hasOne(Badge, {foreignKey: 'badge_id'})
+Award.hasOne(Badge, { foreignKey: 'badge_id' })
 
 Note.belongsTo(User)
 Feedback.belongsTo(User)

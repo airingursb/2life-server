@@ -1,7 +1,7 @@
 module.exports = (sequelize, DataTypes) => {
 
   const { TEXT, DOUBLE, INTEGER, STRING } = DataTypes
-  
+
   return sequelize.define('note', {
     'user_id': INTEGER,
     'title': TEXT,

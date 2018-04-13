@@ -1,7 +1,6 @@
 import express from 'express'
 
 import { User, Code, Message } from '../models'
-import * as Model from '../models/util'
 
 import md5 from 'md5'
 
@@ -16,27 +15,25 @@ import {
   md5Pwd 
 } from '../config'
 
+
 const router = express.Router()
 
 /* users/code */
 router.post('/code', (req, res) => {
 
-  const {user_account} = req.body
+  const {account} = req.body
+  validate(res, false, account)
 
-  validate(res, false, user_account)
-
-  const now = new Date().getTime()
-
+  const now = Date.now()
   const code = Math.floor(Math.random() * 8999 + 1000)
 
   const postData = {
-    mobile: user_account,
+    mobile: account,
     text: '【双生APP】您的验证码是' + code,
     apikey: YUNPIAN_APIKEY
   }
 
   const content = querystring.stringify(postData)
-
   const options = {
     host: 'sms.yunpian.com',
     path: '/v2/sms/single_send.json',
@@ -50,7 +47,7 @@ router.post('/code', (req, res) => {
   }
 
   const model = {
-    user_account,
+    account,
     code,
     timestamp: now,
     used: false
@@ -66,15 +63,15 @@ router.post('/code', (req, res) => {
   }
 
   const response = async () => {
-    const results = await Model.findAll(Code, {user_account, used: false})
+    const results = await Code.findAll({where: {account, used: false}})
     if (results[0] !== undefined) {
       if (now - results[0].timestamp < 600000) {
         return res.json(MESSAGE.REQUEST_ERROR)
       }
     }
-    await Model.create(Code, model)
+    await Code.create(model)
     await sendMsg()
-    return res.json({...MESSAGE.OK, timestamp: now})
+    return res.json({...MESSAGE.OK, data: {timestamp: now}})
   }
 
   response()
@@ -83,32 +80,31 @@ router.post('/code', (req, res) => {
 /* users/register */
 router.post('/register', (req, res) => {
 
-  const {user_account, user_password, user_name, code, timestamp} = req.body
-
-  validate(res, false, user_account, user_password, user_name, code, timestamp)
+  const {account, password, code, timestamp} = req.body
+  validate(res, false, account, password, code, timestamp)
 
   const findCode = async () => {
-    return await Model.findOne(Code, {user_account, code, timestamp, used: false})
+    return await Code.findOne({where: {account, code, timestamp, used: false}})
   }
 
   const response = async () => {
     const code = await findCode()
     if (code) {
-      const user = await Model.findOne(User, {user_account})
+      const user = await User.findOne({where: {account}})
       if (user) {
         return res.json(MESSAGE.USER_EXIST)
       } else {
         const userinfo = {
-          user_account,
-          user_password: md5(user_password),
-          user_sex: 0,
-          user_name,
+          account,
+          password: md5(password),
+          sex: 0,
+          name: account,
           user_other_id: -1,
-          user_code: '0' + Math.floor((Math.random() * 89999 + 10000)),
-          user_message: 1,
-          user_face: 'https://airing.ursb.me/image/twolife/male.png'
+          code: '0' + Math.floor((Math.random() * 89999 + 10000)),
+          status: 0,
+          face: 'https://airing.ursb.me/image/twolife/male.png'
         }
-        await Model.create(User, userinfo)
+        await User.create(userinfo)
         return res.json({...MESSAGE.OK, data: user})
       }
     }
@@ -121,12 +117,11 @@ router.post('/register', (req, res) => {
 /* users/login */
 router.post('/login', (req, res) => {
 
-  const {user_account, user_password} = req.body
-
-  validate(res, false, user_account, user_password)
+  const {account, password} = req.body
+  validate(res, false, account, password)
 
   const response = async () => {
-    const user = await Model.findOne(User, {user_account})
+    const user = await User.findOne({where: {account}})
     if (!user) return res.json(MESSAGE.USER_NOT_EXIST)
 
     if (user.user_password !== md5(user_password))
@@ -135,13 +130,17 @@ router.post('/login', (req, res) => {
     const token = md5Pwd((user.id).toString() + Date.now().toString() + KEY)
 
     let partner = {}
-    if (user.user_other_id !== -1 && user.user_other_id !== -404)
-      partner = await Model.findOne(User, {id: user.user_other_id})
+    if (user.user_other_id !== -1 && user.user_other_id !== -404) {
+      partner = await User.findOne({where: {id: user.user_other_id}})
+    }
 
     return res.json({
       ...MESSAGE.OK,
-      data: {...user.dataValues, user_password: 0, uid: user.id, token, timestamp: Date.now()},
-      partner: {...partner.dataValues, user_password: 0},
+      data: {
+        user: {...user.dataValues, password: 0},
+        key: {uid: user.id, token, timestamp: Date.now()},
+        partner: {...partner.dataValues, password: 0}
+      }
     })
   }
 
@@ -152,7 +151,6 @@ router.post('/login', (req, res) => {
 router.post('/user', (req, res) => {
 
   const {uid, timestamp, token, user_id} = req.body
-
   validate(res, true, uid, timestamp, token, user_id)
 
   const response = async () => {
@@ -172,7 +170,6 @@ router.post('/user', (req, res) => {
 router.post('/update', (req, res) => {
 
   const {uid, timestamp, token, user_sex, user_name, user_face} = req.body
-
   validate(res, true, uid, timestamp, token, user_sex, user_name, user_face)
 
   const response = async () => {
@@ -191,7 +188,6 @@ router.post('/update', (req, res) => {
 router.post('/close_connect', (req, res) => {
 
   const {uid, timestamp, token, user_other_id} = req.body
-
   validate(res, true, uid, timestamp, token, user_other_id)
 
   const response = async () => {
@@ -210,7 +206,6 @@ router.post('/close_connect', (req, res) => {
 router.post('/connect', (req, res) => {
 
   const {uid, timestamp, token, sex} = req.body
-
   validate(res, true, uid, timestamp, token, sex)
 
   const response = async () => {
@@ -232,7 +227,6 @@ router.post('/connect', (req, res) => {
 router.post('/connect_by_id', (req, res) => {
 
   const {uid, timestamp, token, sex, code} = req.body
-
   validate(res, true, uid, timestamp, token, sex, code)
 
   const response = async () => {
@@ -254,7 +248,6 @@ router.post('/connect_by_id', (req, res) => {
 router.post('/disconnect', (req, res) => {
 
   const {uid, timestamp, token} = req.body
-
   validate(res, true, uid, timestamp, token)
 
   const response = async () => {
@@ -274,7 +267,6 @@ router.post('/disconnect', (req, res) => {
 router.post('/feedback', (req, res) => {
 
   const {uid, timestamp, token, contact, content} = req.body
-
   validate(res, true, uid, timestamp, token, contact, content)
 
   const response = async () => {
@@ -291,7 +283,6 @@ router.post('/feedback', (req, res) => {
 router.post('/show_notification', (req, res) => {
 
   const {uid, timestamp, token} = req.body
-
   validate(res, true, uid, timestamp, token)
 
   const response = async () => {

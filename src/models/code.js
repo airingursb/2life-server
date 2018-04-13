@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-  
+
   const { STRING, BOOLEAN } = DataTypes
 
   return sequelize.define('code', {

@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-  
+
   const { TEXT, INTEGER, STRING } = DataTypes
 
   return sequelize.define('feedback', {

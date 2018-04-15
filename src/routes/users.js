@@ -7,12 +7,12 @@ import md5 from 'md5'
 import https from 'https'
 import querystring from 'querystring'
 
-import { 
-  MESSAGE, 
-  KEY, 
-  YUNPIAN_APIKEY, 
-  validate, 
-  md5Pwd 
+import {
+  MESSAGE,
+  KEY,
+  YUNPIAN_APIKEY,
+  validate,
+  md5Pwd
 } from '../config'
 
 
@@ -21,7 +21,7 @@ const router = express.Router()
 /* users/code */
 router.post('/code', (req, res) => {
 
-  const {account} = req.body
+  const { account } = req.body
   validate(res, false, account)
 
   const now = Date.now()
@@ -63,7 +63,7 @@ router.post('/code', (req, res) => {
   }
 
   const response = async () => {
-    const results = await Code.findAll({where: {account, used: false}})
+    const results = await Code.findAll({ where: { account, used: false } })
     if (results[0] !== undefined) {
       if (now - results[0].timestamp < 600000) {
         return res.json(MESSAGE.REQUEST_ERROR)
@@ -71,7 +71,7 @@ router.post('/code', (req, res) => {
     }
     await Code.create(model)
     await sendMsg()
-    return res.json({...MESSAGE.OK, data: {timestamp: now}})
+    return res.json({ ...MESSAGE.OK, data: { timestamp: now } })
   }
 
   response()
@@ -80,17 +80,17 @@ router.post('/code', (req, res) => {
 /* users/register */
 router.post('/register', (req, res) => {
 
-  const {account, password, code, timestamp} = req.body
+  const { account, password, code, timestamp } = req.body
   validate(res, false, account, password, code, timestamp)
 
   const findCode = async () => {
-    return await Code.findOne({where: {account, code, timestamp, used: false}})
+    return await Code.findOne({ where: { account, code, timestamp, used: false } })
   }
 
   const response = async () => {
     const code = await findCode()
     if (code) {
-      const user = await User.findOne({where: {account}})
+      const user = await User.findOne({ where: { account } })
       if (user) {
         return res.json(MESSAGE.USER_EXIST)
       } else {
@@ -105,7 +105,7 @@ router.post('/register', (req, res) => {
           face: 'https://airing.ursb.me/image/twolife/male.png'
         }
         await User.create(userinfo)
-        return res.json({...MESSAGE.OK, data: user})
+        return res.json({ ...MESSAGE.OK, data: user })
       }
     }
     return res.json(MESSAGE.CODE_ERROR)
@@ -117,11 +117,11 @@ router.post('/register', (req, res) => {
 /* users/login */
 router.post('/login', (req, res) => {
 
-  const {account, password} = req.body
+  const { account, password } = req.body
   validate(res, false, account, password)
 
   const response = async () => {
-    const user = await User.findOne({where: {account}})
+    const user = await User.findOne({ where: { account } })
     if (!user) return res.json(MESSAGE.USER_NOT_EXIST)
 
     if (user.user_password !== md5(user_password))
@@ -131,15 +131,15 @@ router.post('/login', (req, res) => {
 
     let partner = {}
     if (user.user_other_id !== -1 && user.user_other_id !== -404) {
-      partner = await User.findOne({where: {id: user.user_other_id}})
+      partner = await User.findOne({ where: { id: user.user_other_id } })
     }
 
     return res.json({
       ...MESSAGE.OK,
       data: {
-        user: {...user.dataValues, password: 0},
-        key: {uid: user.id, token, timestamp: Date.now()},
-        partner: {...partner.dataValues, password: 0}
+        user: { ...user.dataValues, password: 0 },
+        key: { uid: user.id, token, timestamp: Date.now() },
+        partner: { ...partner.dataValues, password: 0 }
       }
     })
   }
@@ -148,18 +148,18 @@ router.post('/login', (req, res) => {
 })
 
 /* users/user */
-router.post('/user', (req, res) => {
+router.get('/user', (req, res) => {
 
-  const {uid, timestamp, token, user_id} = req.body
+  const { uid, timestamp, token, user_id } = req.query
   validate(res, true, uid, timestamp, token, user_id)
 
   const response = async () => {
-    const user = await Model.findOne(User, {id: user_id})
+    const user = await User.findOne({where: { id: user_id }})
     if (!user)
       return res.json(MESSAGE.USER_NOT_EXIST)
     return res.json({
       ...MESSAGE.OK,
-      data: {...user, user_password: 0},
+      data: { ...user, user_password: 0 }
     })
   }
 
@@ -169,16 +169,12 @@ router.post('/user', (req, res) => {
 /* users/update */
 router.post('/update', (req, res) => {
 
-  const {uid, timestamp, token, user_sex, user_name, user_face} = req.body
-  validate(res, true, uid, timestamp, token, user_sex, user_name, user_face)
+  const { uid, timestamp, token, sex, name, face } = req.body
+  validate(res, true, uid, timestamp, token, sex, name, face)
 
   const response = async () => {
-    await Model.update(User, {user_name, user_sex, user_face}, {id: user_id})
-    const user = await Model.findOne(User, {id: user_id})
-    return res.json({
-      ...MESSAGE.OK,
-      data: {...user, user_password: 0, uid: user.id, token, timestamp},
-    })
+    await User.update({ name, sex, face }, { where: { id: uid } })
+    return res.json(MESSAGE.OK)
   }
 
   response()
@@ -187,13 +183,13 @@ router.post('/update', (req, res) => {
 /* users/close_connect */
 router.post('/close_connect', (req, res) => {
 
-  const {uid, timestamp, token, user_other_id} = req.body
+  const { uid, timestamp, token, user_other_id } = req.body
   validate(res, true, uid, timestamp, token, user_other_id)
 
   const response = async () => {
-    await Model.update(User, {user_other_id: -404}, {id: user_id})
+    await Model.update(User, { user_other_id: -404 }, { id: user_id })
     if (user_other_id !== -1) {
-      await Model.update(User, {user_other_id: -1}, {id: user_other_id})
+      await Model.update(User, { user_other_id: -1 }, { id: user_other_id })
       return res.json(MESSAGE.OK)
     }
     return res.json(MESSAGE.OK)
@@ -205,18 +201,18 @@ router.post('/close_connect', (req, res) => {
 /* users/connect */
 router.post('/connect', (req, res) => {
 
-  const {uid, timestamp, token, sex} = req.body
+  const { uid, timestamp, token, sex } = req.body
   validate(res, true, uid, timestamp, token, sex)
 
   const response = async () => {
-    const users = await Model.findAll(User, {user_sex: sex === 0 ? 1 : 0, user_other_id: -1})
+    const users = await Model.findAll(User, { user_sex: sex === 0 ? 1 : 0, user_other_id: -1 })
     if (!users[0]) return res.json(MESSAGE.USER_NOT_EXIST)
     const user = users[Math.floor(Math.random() * users.length)]
-    await Model.update(User, {user_other_id: user.id}, {id: uid})
-    await Model.update(User, {user_other_id: uid}, {id: user.id})
+    await Model.update(User, { user_other_id: user.id }, { id: uid })
+    await Model.update(User, { user_other_id: uid }, { id: user.id })
     return res.json({
       ...MESSAGE.OK,
-      data: {...user, user_password: 0, user_id: user.user_other_id}
+      data: { ...user, user_password: 0, user_id: user.user_other_id }
     })
   }
 
@@ -226,18 +222,18 @@ router.post('/connect', (req, res) => {
 /* users/connect_by_id */
 router.post('/connect_by_id', (req, res) => {
 
-  const {uid, timestamp, token, sex, code} = req.body
+  const { uid, timestamp, token, sex, code } = req.body
   validate(res, true, uid, timestamp, token, sex, code)
 
   const response = async () => {
-    const users = await Model.findAll(User, {user_code: code, user_sex: sex === 0 ? 1 : 0, user_other_id: -1})
+    const users = await Model.findAll(User, { user_code: code, user_sex: sex === 0 ? 1 : 0, user_other_id: -1 })
     if (!users[0]) return res.json(MESSAGE.USER_NOT_EXIST)
     const user = users[Math.floor(Math.random() * users.length)]
-    await Model.update(User, {user_other_id: user.id}, {id: uid})
-    await Model.update(User, {user_other_id: uid}, {id: user.id})
+    await Model.update(User, { user_other_id: user.id }, { id: uid })
+    await Model.update(User, { user_other_id: uid }, { id: user.id })
     return res.json({
       ...MESSAGE.OK,
-      data: {...user, user_password: 0, user_id: user.user_other_id}
+      data: { ...user, user_password: 0, user_id: user.user_other_id }
     })
   }
 
@@ -247,16 +243,16 @@ router.post('/connect_by_id', (req, res) => {
 /* users/disconnect */
 router.post('/disconnect', (req, res) => {
 
-  const {uid, timestamp, token} = req.body
+  const { uid, timestamp, token } = req.body
   validate(res, true, uid, timestamp, token)
 
   const response = async () => {
-    const users = await Model.findAll(User, {user_other_id: uid})
+    const users = await Model.findAll(User, { user_other_id: uid })
 
     const ids = await users.map(user => {
       return user.dataValues.id
     })
-    await Model.update(User, {user_other_id: -1}, {id: ids})
+    await Model.update(User, { user_other_id: -1 }, { id: ids })
     return res.json(MESSAGE.OK)
   }
 
@@ -266,13 +262,13 @@ router.post('/disconnect', (req, res) => {
 /* users/feedback */
 router.post('/feedback', (req, res) => {
 
-  const {uid, timestamp, token, contact, content} = req.body
+  const { uid, timestamp, token, contact, content } = req.body
   validate(res, true, uid, timestamp, token, contact, content)
 
   const response = async () => {
-    const user = await Model.findOne(User, {id: uid})
+    const user = await Model.findOne(User, { id: uid })
     if (!user) return res.json(MESSAGE.USER_NOT_EXIST)
-    user.createFeedback({contact, content})
+    user.createFeedback({ contact, content })
     return res.json(MESSAGE.OK)
   }
 
@@ -282,11 +278,11 @@ router.post('/feedback', (req, res) => {
 /* users/show_notification */
 router.post('/show_notification', (req, res) => {
 
-  const {uid, timestamp, token} = req.body
+  const { uid, timestamp, token } = req.body
   validate(res, true, uid, timestamp, token)
 
   const response = async () => {
-    const messages = await Model.findOne(Message, {}, {'order': 'message_date DESC'})
+    const messages = await Model.findOne(Message, {}, { 'order': 'message_date DESC' })
     const data = await messages.map(message => {
       return {
         ...message.dataValues,
@@ -298,8 +294,8 @@ router.post('/show_notification', (req, res) => {
         url: message.dataValues.message_url,
       }
     })
-    await Model.update(User, {user_message: 0}, {id: uid})
-    return res.json({...MESSAGE.OK, data})
+    await Model.update(User, { user_message: 0 }, { id: uid })
+    return res.json({ ...MESSAGE.OK, data })
   }
 
   response()

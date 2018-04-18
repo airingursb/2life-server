@@ -101,7 +101,7 @@ router.post('/register', (req, res) => {
           name: account,
           user_other_id: -1,
           code: '0' + Math.floor((Math.random() * 89999 + 10000)),
-          status: 0,
+          status: 502,
           face: 'https://airing.ursb.me/image/twolife/male.png'
         }
         await User.create(userinfo)
@@ -124,13 +124,13 @@ router.post('/login', (req, res) => {
     const user = await User.findOne({ where: { account } })
     if (!user) return res.json(MESSAGE.USER_NOT_EXIST)
 
-    if (user.user_password !== md5(user_password))
+    if (user.password !== md5(password))
       return res.json(MESSAGE.PASSWORD_ERROR)
 
     const token = md5Pwd((user.id).toString() + Date.now().toString() + KEY)
 
     let partner = {}
-    if (user.user_other_id !== -1 && user.user_other_id !== -404) {
+    if (user.user_other_id !== -1 && user.status === 1) {
       partner = await User.findOne({ where: { id: user.user_other_id } })
     }
 
@@ -154,12 +154,11 @@ router.get('/user', (req, res) => {
   validate(res, true, uid, timestamp, token, user_id)
 
   const response = async () => {
-    const user = await User.findOne({where: { id: user_id }})
-    if (!user)
-      return res.json(MESSAGE.USER_NOT_EXIST)
+    const user = await User.findOne({ where: { id: user_id } })
+    if (!user) return res.json(MESSAGE.USER_NOT_EXIST)
     return res.json({
       ...MESSAGE.OK,
-      data: { ...user, user_password: 0 }
+      data: { ...user.dataValues, password: 0 }
     })
   }
 
@@ -180,39 +179,112 @@ router.post('/update', (req, res) => {
   response()
 })
 
-/* users/close_connect */
-router.post('/close_connect', (req, res) => {
+/* users/disconnect */
+router.get('/disconnect', (req, res) => {
 
-  const { uid, timestamp, token, user_other_id } = req.body
-  validate(res, true, uid, timestamp, token, user_other_id)
+  const { uid, timestamp, token } = req.query
+  validate(res, true, uid, timestamp, token)
 
   const response = async () => {
-    await Model.update(User, { user_other_id: -404 }, { id: user_id })
-    if (user_other_id !== -1) {
-      await Model.update(User, { user_other_id: -1 }, { id: user_other_id })
-      return res.json(MESSAGE.OK)
-    }
+    const user = await User.findOne({ where: { id: uid } })
+
+    await User.update({ status: 0, user_other_id: -1 }, { id: user.user_other_id })
+    await User.update({ status: 0, user_other_id: -1 }, { id: uid })
+
     return res.json(MESSAGE.OK)
   }
 
   response()
 })
 
-/* users/connect */
-router.post('/connect', (req, res) => {
+/* users/connect_by_random */
+router.get('/connect_by_random', (req, res) => {
 
-  const { uid, timestamp, token, sex } = req.body
-  validate(res, true, uid, timestamp, token, sex)
+  const { uid, timestamp, token } = req.query
+  validate(res, true, uid, timestamp, token)
 
   const response = async () => {
-    const users = await Model.findAll(User, { user_sex: sex === 0 ? 1 : 0, user_other_id: -1 })
-    if (!users[0]) return res.json(MESSAGE.USER_NOT_EXIST)
-    const user = users[Math.floor(Math.random() * users.length)]
-    await Model.update(User, { user_other_id: user.id }, { id: uid })
-    await Model.update(User, { user_other_id: uid }, { id: user.id })
+
+    const user = await User.findOne({ where: { id: uid } })
+
+    let condition = {}
+
+    switch (user.status) {
+    case 0:
+      return res.json(MESSAGE.CONNECT_ERROR_CLOSE)
+      break
+    case 1:
+      return res.json(MESSAGE.CONNECT_ERROR_ALREADY)
+      break
+    case 101:
+      condition = {
+        sex: user.sex === 0 ? 1 : 0,
+        mode: user.mode > 50 ? { 'lte': 50 } : { 'gte': 50 },
+        total_notes: { 'gte': 1 }
+      }
+      break
+    case 102:
+      condition = {
+        sex: user.sex === 0 ? 1 : 0,
+        mode: user.mode > 50 ? { 'gte': 50 } : { 'lte': 50 },
+        total_notes: { 'gte': 1 }
+      }
+      break
+    case 103:
+      condition = {
+        sex: user.sex === 0 ? 1 : 0,
+        total_notes: { 'gte': 1 }
+      }
+      break
+    case 201:
+      condition = {
+        sex: user.sex === 0 ? 0 : 1,
+        mode: user.mode > 50 ? { 'lte': 50 } : { 'gte': 50 },
+        total_notes: { 'gte': 1 }
+      }
+      break
+    case 202:
+      condition = {
+        sex: user.sex === 0 ? 0 : 1,
+        mode: user.mode > 50 ? { 'gte': 50 } : { 'lte': 50 },
+        total_notes: { 'gte': 1 }
+      }
+      break
+    case 203:
+      condition = {
+        sex: user.sex === 0 ? 0 : 1,
+        total_notes: { 'gte': 1 }
+      }
+      break
+    case 501:
+      return res.json(MESSAGE.CONNECT_ERROR_NO_TIME)
+      break
+    case 502:
+      return res.json(MESSAGE.CONNECT_ERROR_NO_NOTE)
+      break
+    default:
+      return res.json(MESSAGE.CONNECT_ERROR_BAN)
+      break
+    }
+
+    const candidates = await User.findAll({ where: condition })
+
+    if (!candidates[0]) return res.json(MESSAGE.USER_NOT_EXIST)
+
+    const partner = candidates[Math.floor(Math.random() * candidates.length)]
+
+    await User.update({ status: 1, user_other_id: partner.id }, { id: uid })
+    await User.update({ status: 1, user_other_id: uid }, { id: partner.id })
+
+    /**
+     * 1. 匹配次数为主动匹配的次数
+     * 2. 匹配时暂只减少主动匹配者的次数
+     * 3. 匹配次数为零只能被匹配
+     */
+
     return res.json({
       ...MESSAGE.OK,
-      data: { ...user, user_password: 0, user_id: user.user_other_id }
+      data: { ...user.dataValues, password: 0 }
     })
   }
 
@@ -235,25 +307,6 @@ router.post('/connect_by_id', (req, res) => {
       ...MESSAGE.OK,
       data: { ...user, user_password: 0, user_id: user.user_other_id }
     })
-  }
-
-  response()
-})
-
-/* users/disconnect */
-router.post('/disconnect', (req, res) => {
-
-  const { uid, timestamp, token } = req.body
-  validate(res, true, uid, timestamp, token)
-
-  const response = async () => {
-    const users = await Model.findAll(User, { user_other_id: uid })
-
-    const ids = await users.map(user => {
-      return user.dataValues.id
-    })
-    await Model.update(User, { user_other_id: -1 }, { id: ids })
-    return res.json(MESSAGE.OK)
   }
 
   response()

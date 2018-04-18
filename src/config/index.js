@@ -41,6 +41,30 @@ export const MESSAGE = {
     code: 502,
     message: '请求间隔过短',
   },
+  CONNECT_ERROR_CLOSE: {
+    code: 600,
+    message: '用户已关闭匹配',
+  },
+  CONNECT_ERROR_ALREADY: {
+    code: 601,
+    message: '用户已匹配',
+  },
+  CONNECT_ERROR_BAN: {
+    code: 602,
+    message: '用户没有匹配权限'
+  },
+  CONNECT_ERROR_NO_TIME: {
+    code: 603,
+    message: '用户没有匹配次数'
+  },
+  CONNECT_ERROR_NO_NOTE: {
+    code: 604,
+    message: '用户没有写过日记'
+  },
+  CONNECT_ERROR_BAN_NOW: {
+    code: 605,
+    message: '用户没有匹配权限'
+  },
 }
 
 export const KEY = 'airing'

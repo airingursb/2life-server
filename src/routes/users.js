@@ -209,15 +209,17 @@ router.get('/connect_by_random', (req, res) => {
 
     let condition = {}
 
+    // status 的意义详见数据字典
     switch (user.status) {
-    case 0:
+    case 999:
       return res.json(MESSAGE.CONNECT_ERROR_CLOSE)
       break
-    case 1:
+    case 1000:
       return res.json(MESSAGE.CONNECT_ERROR_ALREADY)
       break
     case 101:
       condition = {
+        status: {'lte': 501},
         sex: user.sex === 0 ? 1 : 0,
         mode: user.mode > 50 ? { 'lte': 50 } : { 'gte': 50 },
         total_notes: { 'gte': 1 }
@@ -225,6 +227,7 @@ router.get('/connect_by_random', (req, res) => {
       break
     case 102:
       condition = {
+        status: {'lte': 501},
         sex: user.sex === 0 ? 1 : 0,
         mode: user.mode > 50 ? { 'gte': 50 } : { 'lte': 50 },
         total_notes: { 'gte': 1 }
@@ -232,12 +235,14 @@ router.get('/connect_by_random', (req, res) => {
       break
     case 103:
       condition = {
+        status: {'lte': 501},
         sex: user.sex === 0 ? 1 : 0,
         total_notes: { 'gte': 1 }
       }
       break
     case 201:
       condition = {
+        status: {'lte': 501},
         sex: user.sex === 0 ? 0 : 1,
         mode: user.mode > 50 ? { 'lte': 50 } : { 'gte': 50 },
         total_notes: { 'gte': 1 }
@@ -245,6 +250,7 @@ router.get('/connect_by_random', (req, res) => {
       break
     case 202:
       condition = {
+        status: {'lte': 501},
         sex: user.sex === 0 ? 0 : 1,
         mode: user.mode > 50 ? { 'gte': 50 } : { 'lte': 50 },
         total_notes: { 'gte': 1 }
@@ -252,6 +258,7 @@ router.get('/connect_by_random', (req, res) => {
       break
     case 203:
       condition = {
+        status: {'lte': 501},
         sex: user.sex === 0 ? 0 : 1,
         total_notes: { 'gte': 1 }
       }
@@ -273,18 +280,27 @@ router.get('/connect_by_random', (req, res) => {
 
     const partner = candidates[Math.floor(Math.random() * candidates.length)]
 
-    await User.update({ status: 1, user_other_id: partner.id }, { id: uid })
-    await User.update({ status: 1, user_other_id: uid }, { id: partner.id })
+    if (user.last_times === 1) {
+      await User.update({ status: 501, user_other_id: partner.id }, { id: uid })
+    } else {
+      await User.update({ status: 1000, user_other_id: partner.id }, { id: uid })
+    }
+
+    await User.update({ status: 1000, user_other_id: uid }, { id: partner.id })
 
     /**
+     * 匹配逻辑
      * 1. 匹配次数为主动匹配的次数
      * 2. 匹配时暂只减少主动匹配者的次数
      * 3. 匹配次数为零只能被匹配
      */
 
+    await user.decrement('last_times')
+    await user.increment('total_times')
+
     return res.json({
       ...MESSAGE.OK,
-      data: { ...user.dataValues, password: 0 }
+      data: { ...partner.dataValues, password: 0 }
     })
   }
 
@@ -292,20 +308,44 @@ router.get('/connect_by_random', (req, res) => {
 })
 
 /* users/connect_by_id */
-router.post('/connect_by_id', (req, res) => {
+router.get('/connect_by_id', (req, res) => {
 
-  const { uid, timestamp, token, sex, code } = req.body
-  validate(res, true, uid, timestamp, token, sex, code)
+  const { uid, timestamp, token, code } = req.query
+  validate(res, true, uid, timestamp, token, code)
 
   const response = async () => {
-    const users = await Model.findAll(User, { user_code: code, user_sex: sex === 0 ? 1 : 0, user_other_id: -1 })
-    if (!users[0]) return res.json(MESSAGE.USER_NOT_EXIST)
-    const user = users[Math.floor(Math.random() * users.length)]
-    await Model.update(User, { user_other_id: user.id }, { id: uid })
-    await Model.update(User, { user_other_id: uid }, { id: user.id })
+    const user = await User.findOne({ where: { id: uid } })
+    const partner = await User.findOne({ where: { code } })
+
+    if (!partner) {
+      return res.json(MESSAGE.USER_NOT_EXIST)
+    }
+
+    if (user.status === 501)
+      return res.json(MESSAGE.CONNECT_ERROR_NO_TIME)
+    if (user.status === 502 || partner.status === 502)
+      return res.json(MESSAGE.CONNECT_ERROR_NO_NOTE)
+    if (user.status === 503 || user.status === 504 || partner.status === 503 || partner.status === 504)
+      return res.json(MESSAGE.CONNECT_ERROR_BAN)
+    if (user.status === 999 || partner.status === 999)
+      return res.json(MESSAGE.CONNECT_ERROR_CLOSE)
+    if (user.status === 1000 || partner.status === 1000)
+      return res.json(MESSAGE.CONNECT_ERROR_ALREADY)
+
+    if (user.last_times === 1) {
+      await User.update({ status: 502, user_other_id: partner.id }, { id: uid })
+    } else {
+      await User.update({ status: 1000, user_other_id: partner.id }, { id: uid })
+    }
+
+    await User.update({ status: 1000, user_other_id: uid }, { id: partner.id })
+
+    await user.decrement('last_times')
+    await user.increment('total_times')
+
     return res.json({
       ...MESSAGE.OK,
-      data: { ...user, user_password: 0, user_id: user.user_other_id }
+      data: { ...partner.dataValues, password: 0 }
     })
   }
 

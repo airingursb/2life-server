@@ -7,20 +7,18 @@ import { MESSAGE, validate } from '../config'
 
 const router = express.Router()
 
-/* notes/save */
-router.post('/save', (req, res) => {
+/* notes/publish */
+router.post('/publish', (req, res) => {
 
   const {
     uid,
     token,
     timestamp,
-    note_title,
-    note_content,
-    note_date,
-    note_location,
-    note_longitude,
-    note_latitude,
-    note_images
+    title,
+    content,
+    longitude,
+    latitude,
+    images
   } = req.body
 
   validate(
@@ -29,26 +27,28 @@ router.post('/save', (req, res) => {
     uid,
     timestamp,
     token,
-    note_title,
-    note_content,
-    note_date,
-    note_location,
-    note_longitude,
-    note_latitude,
-    note_images)
+    title,
+    content,
+    longitude,
+    latitude,
+    images)
+
+  // TODO: 经纬度转换
+  // https://www.juhe.cn/docs/api/id/15/aid/29
+  // 或者前端解决
 
   const note = {
-    note_title: new Buffer(note_title).toString('base64'),
-    note_content: new Buffer(note_content).toString('base64'),
-    note_date: note_date,
-    note_location: note_location,
-    note_longitude: note_longitude,
-    note_latitude: note_latitude,
-    note_images: note_images
+    title,
+    content,
+    location: '百度地图',
+    longitude,
+    latitude,
+    images,
+    date: Date.now()
   }
 
   const response = async () => {
-    const user = await Model.findOne(User, {id: uid})
+    const user = await User.findOne({ where: { id: uid } })
     await user.createNote(note)
     return res.json(MESSAGE.OK)
   }
@@ -57,14 +57,14 @@ router.post('/save', (req, res) => {
 })
 
 /* notes/delete */
-router.post('/delete', (req, res) => {
+router.get('/delete', (req, res) => {
 
-  const {uid, timestamp, token, note_id} = req.body
+  const { uid, timestamp, token, note_id } = req.query
 
   validate(res, true, uid, timestamp, token, note_id)
 
   const response = async () => {
-    await Model.remove(Note, {id: note_id})
+    await Note.destroy({ where: { id: note_id } })
     return res.json(MESSAGE.OK)
   }
 
@@ -74,14 +74,14 @@ router.post('/delete', (req, res) => {
 /* notes/show */
 router.post('/show', (req, res) => {
 
-  const {uid, timestamp, token, user_id, sex} = req.body
+  const { uid, timestamp, token, user_id, sex } = req.body
 
   validate(res, true, uid, timestamp, token, user_id, sex)
 
-  let condition = {userId: uid}
+  let condition = { userId: uid }
 
   if (user_id !== -1) {
-    condition = {userId: [uid, user_id]}
+    condition = { userId: [uid, user_id] }
   }
 
   const my_sex = sex === 0 ? 'male' : 'female'
@@ -104,10 +104,10 @@ router.post('/show', (req, res) => {
       note.dataValues.user.id === uid
         ? note.dataValues.me = 'yes'
         : note.dataValues.me = 'no'
-      return {...note.dataValues}
+      return { ...note.dataValues }
     })
 
-    return res.json({...MESSAGE.OK, data})
+    return res.json({ ...MESSAGE.OK, data })
   }
 
   response()

@@ -12,5 +12,6 @@ module.exports = (sequelize, DataTypes) => {
     'location': STRING(245),
     'is_liked': INTEGER,
     'mode': DOUBLE,
+    'date': DOUBLE,
   })
 }

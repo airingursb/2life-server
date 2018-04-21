@@ -105,7 +105,7 @@ router.post('/register', (req, res) => {
           face: 'https://airing.ursb.me/image/twolife/male.png'
         }
         await User.create(userinfo)
-        return res.json({ ...MESSAGE.OK, data: user })
+        return res.json({ ...MESSAGE.OK, data: userinfo })
       }
     }
     return res.json(MESSAGE.CODE_ERROR)

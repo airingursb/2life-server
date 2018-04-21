@@ -57,7 +57,7 @@ router.post('/code', (req, res) => {
     const req = https.request(options, (res) => {
       res.setEncoding('utf8')
     })
-    req.write(postContent)
+    req.write(content)
     req.end()
     return true
   }
@@ -347,22 +347,6 @@ router.get('/connect_by_id', (req, res) => {
       ...MESSAGE.OK,
       data: { ...partner.dataValues, password: 0 }
     })
-  }
-
-  response()
-})
-
-/* users/feedback */
-router.post('/feedback', (req, res) => {
-
-  const { uid, timestamp, token, contact, content } = req.body
-  validate(res, true, uid, timestamp, token, contact, content)
-
-  const response = async () => {
-    const user = await Model.findOne(User, { id: uid })
-    if (!user) return res.json(MESSAGE.USER_NOT_EXIST)
-    user.createFeedback({ contact, content })
-    return res.json(MESSAGE.OK)
   }
 
   response()

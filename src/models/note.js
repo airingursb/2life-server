@@ -13,5 +13,6 @@ module.exports = (sequelize, DataTypes) => {
     'is_liked': INTEGER,
     'mode': DOUBLE,
     'date': DOUBLE,
+    'status': INTEGER
   })
 }

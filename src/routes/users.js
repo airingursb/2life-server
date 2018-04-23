@@ -220,7 +220,7 @@ router.get('/connect_by_random', (req, res) => {
     case 101:
       condition = {
         status: {'lte': 501},
-        sex: user.sex === 0 ? 1 : 0,
+        sex: 1,
         mode: user.mode > 50 ? { 'lte': 50 } : { 'gte': 50 },
         total_notes: { 'gte': 1 }
       }
@@ -228,7 +228,7 @@ router.get('/connect_by_random', (req, res) => {
     case 102:
       condition = {
         status: {'lte': 501},
-        sex: user.sex === 0 ? 1 : 0,
+        sex: 1,
         mode: user.mode > 50 ? { 'gte': 50 } : { 'lte': 50 },
         total_notes: { 'gte': 1 }
       }
@@ -236,14 +236,37 @@ router.get('/connect_by_random', (req, res) => {
     case 103:
       condition = {
         status: {'lte': 501},
-        sex: user.sex === 0 ? 1 : 0,
+        sex: 1,
+        total_notes: { 'gte': 1 }
+      }
+      break
+    case 111:
+      condition = {
+        status: {'lte': 501},
+        sex: 0,
+        mode: user.mode > 50 ? { 'lte': 50 } : { 'gte': 50 },
+        total_notes: { 'gte': 1 }
+      }
+      break
+    case 112:
+      condition = {
+        status: {'lte': 501},
+        sex: 0,
+        mode: user.mode > 50 ? { 'gte': 50 } : { 'lte': 50 },
+        total_notes: { 'gte': 1 }
+      }
+      break
+    case 113:
+      condition = {
+        status: {'lte': 501},
+        sex: 0,
         total_notes: { 'gte': 1 }
       }
       break
     case 201:
       condition = {
         status: {'lte': 501},
-        sex: user.sex === 0 ? 0 : 1,
+        sex: 0,
         mode: user.mode > 50 ? { 'lte': 50 } : { 'gte': 50 },
         total_notes: { 'gte': 1 }
       }
@@ -251,7 +274,7 @@ router.get('/connect_by_random', (req, res) => {
     case 202:
       condition = {
         status: {'lte': 501},
-        sex: user.sex === 0 ? 0 : 1,
+        sex: 0,
         mode: user.mode > 50 ? { 'gte': 50 } : { 'lte': 50 },
         total_notes: { 'gte': 1 }
       }
@@ -259,7 +282,30 @@ router.get('/connect_by_random', (req, res) => {
     case 203:
       condition = {
         status: {'lte': 501},
-        sex: user.sex === 0 ? 0 : 1,
+        sex: 0,
+        total_notes: { 'gte': 1 }
+      }
+      break
+    case 211:
+      condition = {
+        status: {'lte': 501},
+        sex: 1,
+        mode: user.mode > 50 ? { 'lte': 50 } : { 'gte': 50 },
+        total_notes: { 'gte': 1 }
+      }
+      break
+    case 212:
+      condition = {
+        status: {'lte': 501},
+        sex: 1,
+        mode: user.mode > 50 ? { 'gte': 50 } : { 'lte': 50 },
+        total_notes: { 'gte': 1 }
+      }
+      break
+    case 213:
+      condition = {
+        status: {'lte': 501},
+        sex: 1,
         total_notes: { 'gte': 1 }
       }
       break

@@ -38,8 +38,8 @@ router.post('/publish', (req, res) => {
   // http://lbs.amap.com/api/webservice/guide/api/georegeo/
 
   const response = async () => {
-    const user = await User.findOne({ where: { id: uid } })
-    const note = {
+    await Note.create({
+      user_id: uid,
       title,
       content,
       location: '百度地图',
@@ -48,8 +48,7 @@ router.post('/publish', (req, res) => {
       images,
       date: Date.now(),
       status: user.status
-    }
-    await user.createNote(note)
+    })
     return res.json(MESSAGE.OK)
   }
 

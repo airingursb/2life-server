@@ -38,6 +38,7 @@ router.post('/publish', (req, res) => {
   // http://lbs.amap.com/api/webservice/guide/api/georegeo/
 
   const response = async () => {
+    const user = await User.findOne({ where: { id: uid } })
     await Note.create({
       user_id: uid,
       title,

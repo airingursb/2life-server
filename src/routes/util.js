@@ -18,18 +18,13 @@ qiniu.conf.ACCESS_KEY = QINIU_ACCESS
 qiniu.conf.SECRET_KEY = QINIU_SECRET
 
 /* 获取七牛token */
-router.post('/qiniu_token', (req, res) => {
+router.get('/qiniu_token', (req, res) => {
 
-  const {uid, timestamp, token, filename} = req.body
-
+  const {uid, timestamp, token, filename} = req.query
   validate(res, true, uid, timestamp, token, filename)
 
-  const uptoken = (bucket, key) => {
-    const putPolicy = new qiniu.rs.PutPolicy(bucket + ':' + key)
-    return putPolicy.token()
-  }
-
-  const data = uptoken(BUCKET, filename)
+  const putPolicy = new qiniu.rs.PutPolicy(BUCKET + ':' + filename)
+  const data = putPolicy.token()
 
   return res.json({...MESSAGE.OK, data})
 })

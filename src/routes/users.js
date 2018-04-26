@@ -1,6 +1,6 @@
 import express from 'express'
 
-import { User, Code, Message } from '../models'
+import { User, Code, Message, Note } from '../models'
 
 import md5 from 'md5'
 
@@ -182,14 +182,22 @@ router.post('/update', (req, res) => {
 /* users/disconnect */
 router.get('/disconnect', (req, res) => {
 
+  // TODO: 接入极光推送
   const { uid, timestamp, token } = req.query
   validate(res, true, uid, timestamp, token)
 
   const response = async () => {
     const user = await User.findOne({ where: { id: uid } })
 
-    await User.update({ status: 0, user_other_id: -1 }, { id: user.user_other_id })
-    await User.update({ status: 0, user_other_id: -1 }, { id: uid })
+    // 用户状态变为解除后的临界状态
+    // 需要用户在匹配页面重新设置状态
+    // 否则无法被匹配到
+    await User.update({ status: 0, user_other_id: -1 }, { id: [uid, user.user_other_id] })
+
+    // 清空双方的喜欢记录
+    await Note.update({is_liked: 0}, {user_id: [uid, user.user_other_id]})
+
+    // TODO: 加入匹配黑名单 (是否必要)
 
     return res.json(MESSAGE.OK)
   }
@@ -200,6 +208,7 @@ router.get('/disconnect', (req, res) => {
 /* users/connect_by_random */
 router.get('/connect_by_random', (req, res) => {
 
+  // TODO: 接入极光推送
   const { uid, timestamp, token } = req.query
   validate(res, true, uid, timestamp, token)
 
@@ -356,6 +365,7 @@ router.get('/connect_by_random', (req, res) => {
 /* users/connect_by_id */
 router.get('/connect_by_id', (req, res) => {
 
+  // TODO: 接入极光推送
   const { uid, timestamp, token, code } = req.query
   validate(res, true, uid, timestamp, token, code)
 

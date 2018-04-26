@@ -32,11 +32,6 @@ router.post('/publish', (req, res) => {
     latitude,
     images)
 
-  // TODO: 经纬度转换
-  // https://www.juhe.cn/docs/api/id/15/aid/29
-  // 或者前端使用高德开放 API 解决
-  // http://lbs.amap.com/api/webservice/guide/api/georegeo/
-
   const response = async () => {
     const user = await User.findOne({ where: { id: uid } })
     await Note.create({
@@ -60,7 +55,6 @@ router.post('/publish', (req, res) => {
 router.get('/delete', (req, res) => {
 
   const { uid, timestamp, token, note_id } = req.query
-
   validate(res, true, uid, timestamp, token, note_id)
 
   const response = async () => {
@@ -74,8 +68,8 @@ router.get('/delete', (req, res) => {
 /* notes/like */
 router.post('/like', (req, res) => {
 
+  // TODO: 接入极光推送
   const { uid, timestamp, token, note_id } = req.body
-
   validate(res, true, uid, timestamp, token, note_id)
 
   const response = async () => {
@@ -90,7 +84,6 @@ router.post('/like', (req, res) => {
 router.get('/list', (req, res) => {
 
   const { uid, timestamp, token } = req.query
-
   validate(res, true, uid, timestamp, token)
 
   const response = async () => {
@@ -160,7 +153,6 @@ router.get('/list', (req, res) => {
 router.get('/show_by_time', (req, res) => {
 
   const { uid, timestamp, token, from_time } = req.query
-
   validate(res, true, uid, timestamp, token, from_time)
 
   const response = async () => {
@@ -171,11 +163,10 @@ router.get('/show_by_time', (req, res) => {
 })
 
 /* notes/sync */
-router.get('/sync', (req, res) => {
+router.post('/sync', (req, res) => {
 
-  const { uid, timestamp, token, from_time } = req.query
-
-  validate(res, true, uid, timestamp, token, from_time)
+  const { uid, timestamp, token, data } = req.body
+  validate(res, true, uid, timestamp, token, data)
 
   const response = async () => {
     return res.json({ ...MESSAGE.OK, data })

@@ -15,9 +15,11 @@ module.exports = (sequelize, DataTypes) => {
     'last_times': INTEGER,
     'total_times': INTEGER,
     'badges': STRING(500),
+    'badge_id': INTEGER,
     'rate': DOUBLE,
     'connect_at': DOUBLE,
     'openid': STRING(45),
     'user_other_id': INTEGER,
+    'ban_id': STRING(1500)
   })
 }

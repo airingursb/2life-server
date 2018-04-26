@@ -12,10 +12,12 @@ User.hasMany(Note, { foreignKey: 'user_id' })
 User.hasMany(Feedback, { foreignKey: 'user_id' })
 
 Award.hasOne(Badge, { foreignKey: 'badge_id' })
+User.hasOne(Badge, { foreignKey: 'badge_id' })
 
 Note.belongsTo(User)
 Feedback.belongsTo(User)
 Badge.belongsTo(Award)
+Badge.belongsTo(User)
 
 db.sync()
 

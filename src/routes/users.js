@@ -1,6 +1,6 @@
 import express from 'express'
 
-import { User, Code, Message, Note } from '../models'
+import { User, Code, Message, Note, Badge } from '../models'
 
 import md5 from 'md5'
 
@@ -121,13 +121,15 @@ router.post('/login', (req, res) => {
   validate(res, false, account, password)
 
   const response = async () => {
-    const user = await User.findOne({ where: { account } })
+    const user = await User.findOne({ where: { account }, include: [Badge] })
     if (!user) return res.json(MESSAGE.USER_NOT_EXIST)
 
     if (user.password !== md5(password))
       return res.json(MESSAGE.PASSWORD_ERROR)
 
-    const token = md5Pwd((user.id).toString() + Date.now().toString() + KEY)
+    const timestamp = Date.now()
+
+    const token = md5Pwd((user.id).toString() + timestamp.toString() + KEY)
 
     let partner = {}
     if (user.user_other_id !== -1 && user.status === 1) {
@@ -138,7 +140,7 @@ router.post('/login', (req, res) => {
       ...MESSAGE.OK,
       data: {
         user: { ...user.dataValues, password: 0 },
-        key: { uid: user.id, token, timestamp: Date.now() },
+        key: { uid: user.id, token, timestamp },
         partner: { ...partner.dataValues, password: 0 }
       }
     })

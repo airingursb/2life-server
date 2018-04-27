@@ -1,13 +1,14 @@
 module.exports = (sequelize, DataTypes) => {
 
-  const { TEXT, DOUBLE, STRING, INTEGER } = DataTypes
+  const { DOUBLE, STRING, INTEGER } = DataTypes
 
   return sequelize.define('message', {
-    'date': DOUBLE,
-    'title': TEXT,
+    'title': STRING(125),
     'type': INTEGER,
-    'content': TEXT,
+    'content': STRING(500),
     'image': STRING(125),
-    'url': TEXT,
+    'url': STRING(125),
+    'date': DOUBLE,
+    'user_id': INTEGER
   })
 }

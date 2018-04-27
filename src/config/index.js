@@ -1,4 +1,7 @@
 import md5 from 'md5'
+import { JPush } from 'jpush-async'
+
+const is_Production = false
 
 export const MESSAGE = {
   OK: {
@@ -76,6 +79,33 @@ export const QINIU_SECRET = '' // 七牛SECRET
 export const BUCKET = '' // 七牛BUCKET
 export const ADMIN_USER = 'airing'
 export const ADMIN_PASSWORD = ''
+const JPUSH_KEY = ''
+const JPUSH_SECRET = ''
+
+const client = JPush.buildClient(JPUSH_KEY, JPUSH_SECRET)
+
+export const JiGuangPush = (user_id, message) => {
+  client.push().setPlatform('ios', 'android')
+    .setAudience(JPush.alias(user_id.toString()))
+    .setNotification('双生日记', JPush.ios(message), JPush.android(message, null, 1))
+    .setMessage(message)
+    .setOptions(null, 60, null, is_Production)
+    .send(function (err, res) {
+      if (err) {
+        if (err instanceof JPush.APIConnectionError) {
+          console.log(err.message)
+          // Response Timeout means your request to the server may have already received,
+          // please check whether or not to push
+          console.log(err.isResponseTimeout)
+        } else if (err instanceof JPush.APIRequestError) {
+          console.log(err.message)
+        }
+      } else {
+        console.log('Sendno: ' + res.sendno)
+        console.log('Msg_id: ' + res.msg_id)
+      }
+    })
+}
 
 export const md5Pwd = (password) => {
   const salt = 'Airing_is_genius_3957x8yza6!@#IUHJh~~'

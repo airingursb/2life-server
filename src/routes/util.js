@@ -1,6 +1,6 @@
 import express from 'express'
 import qiniu from 'qiniu'
-import { User, Message, Note } from '../models'
+import { User, Note, Message } from '../models'
 import * as Model from '../models/util'
 
 import {
@@ -10,7 +10,8 @@ import {
   MESSAGE,
   ADMIN_USER,
   ADMIN_PASSWORD,
-  validate
+  validate,
+  JiGuangPush
 } from '../config/index'
 
 const router = express.Router()
@@ -30,30 +31,21 @@ router.get('/qiniu_token', (req, res) => {
 })
 
 /* 后台发送通知 */
-router.post('/push_message', (req, res) => {
-
-  const {user, password, type, title, content, image, url} = req.body
-
-  validate(res, false, user, password, type, title, content, image, url)
-
-  if (user !== ADMIN_USER && password !== ADMIN_PASSWORD)
-    return res.json(MESSAGE.ADMIN_ERROR)
-
-  const message = {
-    message_title: title,
-    message_content: content,
-    message_date: Date.now(),
-    message_type: type,
-    message_image: image,
-    message_url: url
-  }
+router.get('/push_message', (req, res) => {
+  JiGuangPush(1, '您被另一半解除匹配了:(，多写日记来记录自己的生活吧！')
 
   const response = async () => {
-    await Model.create(Message, message)
-    await Model.update(User, {user_message: 1}, {})
+    await Message.create({
+      title: 'Airing 成功匹配到了您，成为您的另一半',
+      type: 201,
+      content: '',
+      image: '',
+      url: '',
+      date: Date.now(),
+      user_id: 1
+    })
     return res.json(MESSAGE.OK)
   }
-
   response()
 })
 

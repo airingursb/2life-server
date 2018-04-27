@@ -2,7 +2,7 @@ import express from 'express'
 
 import { User, Note } from '../models'
 
-import { MESSAGE, validate } from '../config'
+import { MESSAGE, validate, JiGuangPush } from '../config'
 
 const router = express.Router()
 
@@ -68,12 +68,26 @@ router.get('/delete', (req, res) => {
 /* notes/like */
 router.post('/like', (req, res) => {
 
-  // TODO: 接入极光推送
   const { uid, timestamp, token, note_id } = req.body
   validate(res, true, uid, timestamp, token, note_id)
 
   const response = async () => {
+    const user = await User.findOne({ where: { id: uid } })
+    const partner = await User.findOne({ where: { id: user.user_other_id } })
     await Note.update({ is_liked: 1 }, { where: { id: note_id } })
+    // 通知对方被喜欢
+    JiGuangPush(user.user_other_id, '您期待的另一半已经来了:)，多写日记来记录自己的生活吧！')
+    await Message.create({
+      title: `${user.name} 喜欢了你的日记，真是幸福的一天`,
+      type: 203,
+      content: '',
+      image: '',
+      url: '',
+      date: Date.now(),
+      user_id: partner.id
+    })
+    await partner.increment('unread')
+
     return res.json(MESSAGE.OK)
   }
 

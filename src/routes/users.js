@@ -12,9 +12,9 @@ import {
   KEY,
   YUNPIAN_APIKEY,
   validate,
-  md5Pwd
+  md5Pwd,
+  JiGuangPush
 } from '../config'
-
 
 const router = express.Router()
 
@@ -80,6 +80,7 @@ router.post('/code', (req, res) => {
 /* users/register */
 router.post('/register', (req, res) => {
 
+  // TODO: 邀请码逻辑
   const { account, password, code, timestamp } = req.body
   validate(res, false, account, password, code, timestamp)
 
@@ -184,22 +185,35 @@ router.post('/update', (req, res) => {
 /* users/disconnect */
 router.get('/disconnect', (req, res) => {
 
-  // TODO: 接入极光推送
   const { uid, timestamp, token } = req.query
   validate(res, true, uid, timestamp, token)
 
   const response = async () => {
     const user = await User.findOne({ where: { id: uid } })
+    const partner = await User.findAll({ where: { id: user.user_other_id } })
+
+    JiGuangPush(user.user_other_id, '您被另一半解除匹配了:(，多写日记来记录自己的生活吧！')
+    await Message.create({
+      title: '您被另一半解除匹配了QAQ',
+      type: 202,
+      content: '',
+      image: '',
+      url: '',
+      date: Date.now(),
+      user_id: partner.id
+    })
+    await partner.increment('unread')
+
+    // TODO: 彼此加入匹配黑名单
 
     // 用户状态变为解除后的临界状态
     // 需要用户在匹配页面重新设置状态
     // 否则无法被匹配到
-    await User.update({ status: 0, user_other_id: -1 }, { id: [uid, user.user_other_id] })
+    await User.update({ status: 0, user_other_id: -1 }, { id: user.user_other_id })
+    await User.update({ status: 0, user_other_id: -1 }, { id: uid })
 
     // 清空双方的喜欢记录
-    await Note.update({is_liked: 0}, {user_id: [uid, user.user_other_id]})
-
-    // TODO: 加入匹配黑名单 (是否必要)
+    await Note.update({ is_liked: 0 }, { user_id: [uid, user.user_other_id] })
 
     return res.json(MESSAGE.OK)
   }
@@ -210,7 +224,6 @@ router.get('/disconnect', (req, res) => {
 /* users/connect_by_random */
 router.get('/connect_by_random', (req, res) => {
 
-  // TODO: 接入极光推送
   const { uid, timestamp, token } = req.query
   validate(res, true, uid, timestamp, token)
 
@@ -230,7 +243,7 @@ router.get('/connect_by_random', (req, res) => {
       break
     case 101:
       condition = {
-        status: {'lte': 501},
+        status: { 'lte': 501 },
         sex: 1,
         mode: user.mode > 50 ? { 'lte': 50 } : { 'gte': 50 },
         total_notes: { 'gte': 1 }
@@ -238,7 +251,7 @@ router.get('/connect_by_random', (req, res) => {
       break
     case 102:
       condition = {
-        status: {'lte': 501},
+        status: { 'lte': 501 },
         sex: 1,
         mode: user.mode > 50 ? { 'gte': 50 } : { 'lte': 50 },
         total_notes: { 'gte': 1 }
@@ -246,14 +259,14 @@ router.get('/connect_by_random', (req, res) => {
       break
     case 103:
       condition = {
-        status: {'lte': 501},
+        status: { 'lte': 501 },
         sex: 1,
         total_notes: { 'gte': 1 }
       }
       break
     case 111:
       condition = {
-        status: {'lte': 501},
+        status: { 'lte': 501 },
         sex: 0,
         mode: user.mode > 50 ? { 'lte': 50 } : { 'gte': 50 },
         total_notes: { 'gte': 1 }
@@ -261,7 +274,7 @@ router.get('/connect_by_random', (req, res) => {
       break
     case 112:
       condition = {
-        status: {'lte': 501},
+        status: { 'lte': 501 },
         sex: 0,
         mode: user.mode > 50 ? { 'gte': 50 } : { 'lte': 50 },
         total_notes: { 'gte': 1 }
@@ -269,14 +282,14 @@ router.get('/connect_by_random', (req, res) => {
       break
     case 113:
       condition = {
-        status: {'lte': 501},
+        status: { 'lte': 501 },
         sex: 0,
         total_notes: { 'gte': 1 }
       }
       break
     case 201:
       condition = {
-        status: {'lte': 501},
+        status: { 'lte': 501 },
         sex: 0,
         mode: user.mode > 50 ? { 'lte': 50 } : { 'gte': 50 },
         total_notes: { 'gte': 1 }
@@ -284,7 +297,7 @@ router.get('/connect_by_random', (req, res) => {
       break
     case 202:
       condition = {
-        status: {'lte': 501},
+        status: { 'lte': 501 },
         sex: 0,
         mode: user.mode > 50 ? { 'gte': 50 } : { 'lte': 50 },
         total_notes: { 'gte': 1 }
@@ -292,14 +305,14 @@ router.get('/connect_by_random', (req, res) => {
       break
     case 203:
       condition = {
-        status: {'lte': 501},
+        status: { 'lte': 501 },
         sex: 0,
         total_notes: { 'gte': 1 }
       }
       break
     case 211:
       condition = {
-        status: {'lte': 501},
+        status: { 'lte': 501 },
         sex: 1,
         mode: user.mode > 50 ? { 'lte': 50 } : { 'gte': 50 },
         total_notes: { 'gte': 1 }
@@ -307,7 +320,7 @@ router.get('/connect_by_random', (req, res) => {
       break
     case 212:
       condition = {
-        status: {'lte': 501},
+        status: { 'lte': 501 },
         sex: 1,
         mode: user.mode > 50 ? { 'gte': 50 } : { 'lte': 50 },
         total_notes: { 'gte': 1 }
@@ -315,7 +328,7 @@ router.get('/connect_by_random', (req, res) => {
       break
     case 213:
       condition = {
-        status: {'lte': 501},
+        status: { 'lte': 501 },
         sex: 1,
         total_notes: { 'gte': 1 }
       }
@@ -355,6 +368,19 @@ router.get('/connect_by_random', (req, res) => {
     await user.decrement('last_times')
     await user.increment('total_times')
 
+    // 通知对方被匹配
+    JiGuangPush(partner.id, '您期待的另一半已经来了:)，多写日记来记录自己的生活吧！')
+    await Message.create({
+      title: `${user.name} 成功匹配到了您，成为您的另一半`,
+      type: 201,
+      content: '',
+      image: '',
+      url: '',
+      date: Date.now(),
+      user_id: partner.id
+    })
+    await partner.increment('unread')
+
     return res.json({
       ...MESSAGE.OK,
       data: { ...partner.dataValues, password: 0 }
@@ -367,7 +393,6 @@ router.get('/connect_by_random', (req, res) => {
 /* users/connect_by_id */
 router.get('/connect_by_id', (req, res) => {
 
-  // TODO: 接入极光推送
   const { uid, timestamp, token, code } = req.query
   validate(res, true, uid, timestamp, token, code)
 
@@ -401,6 +426,19 @@ router.get('/connect_by_id', (req, res) => {
     await user.decrement('last_times')
     await user.increment('total_times')
 
+    // 通知对方被匹配
+    JiGuangPush(partner.id, '您期待的另一半已经来了:)，多写日记来记录自己的生活吧！')
+    await Message.create({
+      title: `${user.name} 成功匹配到了您，成为您的另一半`,
+      type: 201,
+      content: '',
+      image: '',
+      url: '',
+      date: Date.now(),
+      user_id: partner.id
+    })
+    await partner.increment('unread')
+
     return res.json({
       ...MESSAGE.OK,
       data: { ...partner.dataValues, password: 0 }
@@ -411,25 +449,14 @@ router.get('/connect_by_id', (req, res) => {
 })
 
 /* users/show_notification */
-router.post('/show_notification', (req, res) => {
+router.get('/show_notification', (req, res) => {
 
-  const { uid, timestamp, token } = req.body
+  const { uid, timestamp, token } = req.query
   validate(res, true, uid, timestamp, token)
 
   const response = async () => {
-    const messages = await Model.findOne(Message, {}, { 'order': 'message_date DESC' })
-    const data = await messages.map(message => {
-      return {
-        ...message.dataValues,
-        time: message.dataValues.message_date,
-        title: message.dataValues.message_date,
-        content: message.dataValues.message_content,
-        image: message.dataValues.message_image,
-        type: message.dataValues.message_type,
-        url: message.dataValues.message_url,
-      }
-    })
-    await Model.update(User, { user_message: 0 }, { id: uid })
+    const data = await Message.findAll({ where: { user_id: uid }, order: 'date DESC' })
+    await User.update({ unread: 0 }, { where: { id: uid } })
     return res.json({ ...MESSAGE.OK, data })
   }
 

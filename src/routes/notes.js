@@ -30,7 +30,8 @@ router.post('/publish', (req, res) => {
     content,
     longitude,
     latitude,
-    images)
+    images,
+    mode)
 
   const response = async () => {
     const user = await User.findOne({ where: { id: uid } })
@@ -42,6 +43,7 @@ router.post('/publish', (req, res) => {
       longitude,
       latitude,
       images,
+      mode,
       date: Date.now(),
       status: user.status
     })
@@ -192,11 +194,11 @@ router.post('/sync', (req, res) => {
 /* notes/update */
 router.post('/update', (req, res) => {
 
-  const { uid, timestamp, token, note_id, title, content, images } = req.body
-  validate(res, true, uid, timestamp, token, note_id, title, content, images)
+  const { uid, timestamp, token, note_id, title, content, images, mode } = req.body
+  validate(res, true, uid, timestamp, token, note_id, title, content, images, mode)
 
   const response = async () => {
-    await Note.update({ title, content, images }, { where: { id: note_id } })
+    await Note.update({ title, content, images, mode }, { where: { id: note_id } })
     return res.json(MESSAGE.OK)
   }
 

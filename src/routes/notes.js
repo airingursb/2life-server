@@ -189,5 +189,19 @@ router.post('/sync', (req, res) => {
   response()
 })
 
+/* notes/update */
+router.post('/update', (req, res) => {
+
+  const { uid, timestamp, token, note_id, title, content, images } = req.body
+  validate(res, true, uid, timestamp, token, note_id, title, content, images)
+
+  const response = async () => {
+    await Note.update({ title, content, images }, { where: { id: note_id } })
+    return res.json(MESSAGE.OK)
+  }
+
+  response()
+})
+
 
 module.exports = router

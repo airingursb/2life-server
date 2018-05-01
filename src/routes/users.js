@@ -1,6 +1,6 @@
 import express from 'express'
 
-import { User, Code, Message, Note, Badge } from '../models'
+import { User, Code, Message, Note, Badge, Award } from '../models'
 
 import md5 from 'md5'
 
@@ -80,7 +80,6 @@ router.post('/code', (req, res) => {
 /* users/register */
 router.post('/register', (req, res) => {
 
-  // TODO: 邀请码逻辑
   const { account, password, code, timestamp } = req.body
   validate(res, false, account, password, code, timestamp)
 
@@ -458,6 +457,28 @@ router.get('/show_notification', (req, res) => {
     const data = await Message.findAll({ where: { user_id: uid }, order: 'date DESC' })
     await User.update({ unread: 0 }, { where: { id: uid } })
     return res.json({ ...MESSAGE.OK, data })
+  }
+
+  response()
+})
+
+/* users/invitation_code */
+router.get('/invitation_code', (req, res) => {
+
+  const { uid, timestamp, token, code } = req.query
+  validate(res, true, uid, timestamp, token, code)
+
+  const response = async () => {
+    // TODO: 随机邀请码逻辑
+    // const award = await Award.findOne({ where: { code, used: false } })
+
+    if (code === 'airing5201314') {
+      const user = await User.findOne({ where: { id: uid } })
+      await User.update({ badges: user.badges + '1,', badge_id: 1 }, { where: { id: uid } })
+      return res.json(MESSAGE.OK)
+    } else {
+      return res.json(MESSAGE.CODE_NOT_EXIST)
+    }
   }
 
   response()

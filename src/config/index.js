@@ -32,6 +32,10 @@ export const MESSAGE = {
     code: 405,
     message: '验证码错误',
   },
+  CODE_NOT_EXIST: {
+    code: 406,
+    message: '邀请码失效或不存在',
+  },
   PARAMETER_ERROR: {
     code: 422,
     message: '参数错误',

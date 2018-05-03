@@ -170,11 +170,11 @@ router.get('/user', (req, res) => {
 /* users/update */
 router.post('/update', (req, res) => {
 
-  const { uid, timestamp, token, sex, name, face } = req.body
-  validate(res, true, uid, timestamp, token, sex, name, face)
+  const { uid, timestamp, token, sex, name, face, status } = req.body
+  validate(res, true, uid, timestamp, token, sex, name, face, status)
 
   const response = async () => {
-    await User.update({ name, sex, face }, { where: { id: uid } })
+    await User.update({ name, sex, face, status }, { where: { id: uid } })
     return res.json(MESSAGE.OK)
   }
 

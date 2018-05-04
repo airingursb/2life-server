@@ -74,7 +74,7 @@ export const MESSAGE = {
   },
 }
 
-export const KEY = 'airing'
+export const KEY = ''
 export const SQL_USER = 'root'
 export const SQL_PASSWORD = ''
 export const YUNPIAN_APIKEY = '' // 云片APIKEY
@@ -83,6 +83,10 @@ export const QINIU_SECRET = '' // 七牛SECRET
 export const BUCKET = '' // 七牛BUCKET
 export const ADMIN_USER = 'airing'
 export const ADMIN_PASSWORD = ''
+export const NLP_ID = ''
+export const NLP_SECRET = ''
+
+
 const JPUSH_KEY = ''
 const JPUSH_SECRET = ''
 

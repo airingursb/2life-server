@@ -2,7 +2,23 @@ import express from 'express'
 
 import { User, Note } from '../models'
 
-import { MESSAGE, validate, JiGuangPush } from '../config'
+import {
+  MESSAGE,
+  validate,
+  JiGuangPush,
+  NLP_ID,
+  NLP_SECRET
+} from '../config'
+
+import Promise from 'Promise'
+
+import Capi from 'qcloudapi-sdk'
+
+const capi = new Capi({
+  SecretId: NLP_ID,
+  SecretKey: NLP_SECRET,
+  serviceType: 'wenzhi'
+})
 
 const router = express.Router()
 
@@ -15,6 +31,7 @@ router.post('/publish', (req, res) => {
     timestamp,
     title,
     content,
+    location,
     longitude,
     latitude,
     images
@@ -28,25 +45,43 @@ router.post('/publish', (req, res) => {
     token,
     title,
     content,
+    location,
     longitude,
     latitude,
-    images,
-    mode)
+    images)
+
+  const callApi = () => {
+    return new Promise((resolve, reject) => {
+      capi.request({
+        Region: 'gz',
+        Action: 'TextSentiment',
+        content
+      }, (err, d) => {
+        resolve(d)
+        reject(err)
+      })
+    }).catch((err) => console.log(err))
+  }
 
   const response = async () => {
     const user = await User.findOne({ where: { id: uid } })
+    const data = await callApi()
+    const { positive } = data
+
     await Note.create({
       user_id: uid,
       title,
       content,
-      location: '百度地图',
+      images,
       longitude,
       latitude,
-      images,
-      mode,
+      location,
+      is_liked: 0,
+      mode: positive,
       date: Date.now(),
       status: user.status
     })
+
     return res.json(MESSAGE.OK)
   }
 

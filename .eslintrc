@@ -36,7 +36,7 @@
     "no-var": 2,
     "no-mixed-spaces-and-tabs": 2,
     "no-multi-spaces": 2,
-    "no-console": 1,
+    "no-console": 0,
     "keyword-spacing": 2,
     "space-before-function-paren": 0,
     "block-spacing": 2,

@@ -12,11 +12,14 @@
   },
   "dependencies": {
     "body-parser": "~1.16.0",
+    "crypto-js": "^3.1.9-1",
     "express": "~4.14.1",
     "jpush-async": "^4.0.0-rc.1",
     "md5": "^2.2.1",
     "mysql": "^2.13.0",
+    "qcloudapi-sdk": "^0.1.6",
     "qiniu": "^6.1.13",
+    "request-promise": "^4.2.2",
     "sequelize": "^3.31.1",
     "sha1": "^1.1.1"
   },

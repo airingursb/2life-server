@@ -1,6 +1,6 @@
 import express from 'express'
 
-import { User, Code, Message, Note, Badge, Award } from '../models'
+import { User, Code, Message, Note, Badge } from '../models'
 
 import md5 from 'md5'
 
@@ -170,11 +170,11 @@ router.get('/user', (req, res) => {
 /* users/update */
 router.post('/update', (req, res) => {
 
-  const { uid, timestamp, token, sex, name, face, status } = req.body
-  validate(res, true, uid, timestamp, token, sex, name, face, status)
+  const { uid, timestamp, token, sex, name, face, status, latitude, longitude } = req.body
+  validate(res, true, uid, timestamp, token, sex, name, face, status, latitude, longitude)
 
   const response = async () => {
-    await User.update({ name, sex, face, status }, { where: { id: uid } })
+    await User.update({ name, sex, face, status, latitude, longitude }, { where: { id: uid } })
     return res.json(MESSAGE.OK)
   }
 

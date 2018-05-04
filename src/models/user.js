@@ -21,6 +21,8 @@ module.exports = (sequelize, DataTypes) => {
     'openid': STRING(45),
     'user_other_id': INTEGER,
     'ban_id': STRING(1500),
-    'unread': INTEGER
+    'unread': INTEGER,
+    'latitude': DOUBLE,
+    'longitude': DOUBLE,
   })
 }

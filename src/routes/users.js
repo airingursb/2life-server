@@ -133,7 +133,7 @@ router.post('/login', (req, res) => {
 
     let partner = {}
     if (user.user_other_id !== -1 && user.status === 1) {
-      partner = await User.findOne({ where: { id: user.user_other_id } })
+      partner = await User.findOne({ where: { id: user.user_other_id }, include: [Badge] })
     }
 
     return res.json({
@@ -156,7 +156,7 @@ router.get('/user', (req, res) => {
   validate(res, true, uid, timestamp, token, user_id)
 
   const response = async () => {
-    const user = await User.findOne({ where: { id: user_id } })
+    const user = await User.findOne({ where: { id: user_id }, include: [Badge] })
     if (!user) return res.json(MESSAGE.USER_NOT_EXIST)
     return res.json({
       ...MESSAGE.OK,
@@ -170,8 +170,8 @@ router.get('/user', (req, res) => {
 /* users/update */
 router.post('/update', (req, res) => {
 
-  const { uid, timestamp, token, sex, name, face, status, latitude, longitude } = req.body
-  validate(res, true, uid, timestamp, token, sex, name, face, status, latitude, longitude)
+  const { uid, timestamp, token, sex, name, face, status, latitude, longitude, badge_id, badges } = req.body
+  validate(res, true, uid, timestamp, token, sex, name, face, status, latitude, longitude, badge_id, badges)
 
   const response = async () => {
     await User.update({ name, sex, face, status, latitude, longitude }, { where: { id: uid } })

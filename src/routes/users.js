@@ -487,4 +487,20 @@ router.get('/invitation_code', (req, res) => {
   response()
 })
 
+
+/* users/update_rate */
+router.post('/update_rate', (req, res) => {
+
+  const { uid, timestamp, token, price } = req.body
+  validate(res, true, uid, timestamp, token, price)
+
+  const response = async () => {
+    const user = await User.findOne({where: {id: uid}})
+    await user.increment('rate', {by: price})
+    return res.json(MESSAGE.OK)
+  }
+
+  response()
+})
+
 module.exports = router

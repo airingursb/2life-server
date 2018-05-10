@@ -82,6 +82,9 @@ router.post('/publish', (req, res) => {
       status: user.status
     })
 
+    await User.update({mode}, {where: {id: uid}})
+    await user.increment(total_notes)
+
     return res.json(MESSAGE.OK)
   }
 
@@ -95,7 +98,9 @@ router.get('/delete', (req, res) => {
   validate(res, true, uid, timestamp, token, note_id)
 
   const response = async () => {
+    const user = await User.findOne({ where: { id: uid } })
     await Note.destroy({ where: { id: note_id } })
+    await user.decrement(total_notes)
     return res.json(MESSAGE.OK)
   }
 

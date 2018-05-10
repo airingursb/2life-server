@@ -102,6 +102,9 @@ router.post('/register', (req, res) => {
           user_other_id: -1,
           code: '0' + Math.floor((Math.random() * 89999 + 10000)),
           status: 502,
+          last_times: 3,
+          total_times: 0,
+          total_notes: 0,
           face: 'https://airing.ursb.me/image/twolife/male.png'
         }
         await User.create(userinfo)
@@ -350,7 +353,7 @@ router.get('/connect_by_random', (req, res) => {
     const partner = candidates[Math.floor(Math.random() * candidates.length)]
 
     if (user.last_times === 1) {
-      await User.update({ status: 501, user_other_id: partner.id }, { id: uid })
+      await User.update({ status: 501, user_other_id: partner.id, connect_at: Date.now() }, { id: uid })
     } else {
       await User.update({ status: 1000, user_other_id: partner.id }, { id: uid })
     }
@@ -415,7 +418,7 @@ router.get('/connect_by_id', (req, res) => {
       return res.json(MESSAGE.CONNECT_ERROR_ALREADY)
 
     if (user.last_times === 1) {
-      await User.update({ status: 502, user_other_id: partner.id }, { id: uid })
+      await User.update({ status: 502, user_other_id: partner.id, connect_at: Date.now() }, { id: uid })
     } else {
       await User.update({ status: 1000, user_other_id: partner.id }, { id: uid })
     }

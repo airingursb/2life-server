@@ -495,8 +495,8 @@ router.post('/update_rate', (req, res) => {
   validate(res, true, uid, timestamp, token, price)
 
   const response = async () => {
-    const user = await User.findOne({where: {id: uid}})
-    await user.increment('rate', {by: price})
+    const user = await User.findOne({ where: { id: uid } })
+    await user.increment('rate', { by: price })
     return res.json(MESSAGE.OK)
   }
 

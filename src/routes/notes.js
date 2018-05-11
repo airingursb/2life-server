@@ -77,12 +77,12 @@ router.post('/publish', (req, res) => {
       latitude,
       location,
       is_liked: 0,
-      mode: positive,
+      mode: Math.floor(positive * 100),
       date: Date.now(),
       status: user.status
     })
 
-    await User.update({mode}, {where: {id: uid}})
+    await User.update({ mode: Math.floor(positive * 100) }, { where: { id: uid } })
     await user.increment(total_notes)
 
     return res.json(MESSAGE.OK)

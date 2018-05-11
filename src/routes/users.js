@@ -353,12 +353,12 @@ router.get('/connect_by_random', (req, res) => {
     const partner = candidates[Math.floor(Math.random() * candidates.length)]
 
     if (user.last_times === 1) {
-      await User.update({ status: 501, user_other_id: partner.id, connect_at: Date.now() }, { id: uid })
+      await User.update({ status: 501, user_other_id: partner.id, connect_at: Date.now() }, { where: { id: uid } })
     } else {
-      await User.update({ status: 1000, user_other_id: partner.id }, { id: uid })
+      await User.update({ status: 1000, user_other_id: partner.id }, { where: { id: uid } })
     }
 
-    await User.update({ status: 1000, user_other_id: uid }, { id: partner.id })
+    await User.update({ status: 1000, user_other_id: uid }, { where: { id: partner.id } })
 
     /**
      * 匹配逻辑

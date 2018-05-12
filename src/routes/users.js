@@ -105,6 +105,8 @@ router.post('/register', (req, res) => {
           last_times: 3,
           total_times: 0,
           total_notes: 0,
+          badge_id: -1,
+          badges: '',
           face: 'https://airing.ursb.me/image/twolife/male.png'
         }
         await User.create(userinfo)
@@ -174,10 +176,10 @@ router.get('/user', (req, res) => {
 router.post('/update', (req, res) => {
 
   const { uid, timestamp, token, sex, name, face, status, latitude, longitude, badge_id, badges } = req.body
-  validate(res, true, uid, timestamp, token, sex, name, face, status, latitude, longitude, badge_id, badges)
+  validate(res, true, uid, timestamp, token, sex, name, face, status, latitude, longitude, badge_id)
 
   const response = async () => {
-    await User.update({ name, sex, face, status, latitude, longitude }, { where: { id: uid } })
+    await User.update({ name, sex, face, status, latitude, longitude, badge_id, badges }, { where: { id: uid } })
     return res.json(MESSAGE.OK)
   }
 
@@ -225,6 +227,8 @@ router.get('/disconnect', (req, res) => {
 
 /* users/connect_by_random */
 router.get('/connect_by_random', (req, res) => {
+
+  // TODO: 不允许匹配自己
 
   const { uid, timestamp, token } = req.query
   validate(res, true, uid, timestamp, token)
@@ -395,6 +399,8 @@ router.get('/connect_by_random', (req, res) => {
 /* users/connect_by_id */
 router.get('/connect_by_id', (req, res) => {
 
+  // TODO: 不允许匹配自己
+
   const { uid, timestamp, token, code } = req.query
   validate(res, true, uid, timestamp, token, code)
 
@@ -497,6 +503,36 @@ router.post('/update_rate', (req, res) => {
   const response = async () => {
     const user = await User.findOne({ where: { id: uid } })
     await user.increment('rate', { by: price })
+    return res.json(MESSAGE.OK)
+  }
+
+  response()
+})
+
+/* users/add_last_times */
+router.post('/add_last_times', (req, res) => {
+
+  const { uid, timestamp, token } = req.body
+  validate(res, true, uid, timestamp, token)
+
+  const response = async () => {
+    const user = await User.findOne({ where: { id: uid } })
+    await user.increment('rate')
+    await user.increment('last_times')
+    return res.json(MESSAGE.OK)
+  }
+
+  response()
+})
+
+/* users/close_connection */
+router.get('/close_connection', (req, res) => {
+
+  const { uid, timestamp, token } = req.query
+  validate(res, true, uid, timestamp, token)
+
+  const response = async () => {
+    await User.update({ status: 999 }, { where: { id: uid } })
     return res.json(MESSAGE.OK)
   }
 

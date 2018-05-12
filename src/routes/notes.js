@@ -83,7 +83,7 @@ router.post('/publish', (req, res) => {
     })
 
     await User.update({ mode: Math.floor(positive * 100) }, { where: { id: uid } })
-    await user.increment(total_notes)
+    await user.increment('total_notes')
 
     return res.json(MESSAGE.OK)
   }
@@ -151,7 +151,7 @@ router.get('/list', (req, res) => {
 
     if (u.status === 1000) {
       // 已匹配
-      partner = await Note.findAll({ where: { user_id: user_other_id } })
+      partner = await Note.findAll({ where: { user_id: u.user_other_id } })
     } else if (u.status < 200) {
       // 希望匹配异性，但是未匹配
       let recommends = []

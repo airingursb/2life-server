@@ -192,7 +192,7 @@ router.get('/disconnect', (req, res) => {
 
   const response = async () => {
     const user = await User.findOne({ where: { id: uid } })
-    const partner = await User.findAll({ where: { id: user.user_other_id } })
+    const partner = await User.findOne({ where: { id: user.user_other_id } })
 
     JiGuangPush(user.user_other_id, '您被另一半解除匹配了:(，多写日记来记录自己的生活吧！')
     await Message.create({
@@ -211,11 +211,11 @@ router.get('/disconnect', (req, res) => {
     // 用户状态变为解除后的临界状态
     // 需要用户在匹配页面重新设置状态
     // 否则无法被匹配到
-    await User.update({ status: 0, user_other_id: -1 }, { id: user.user_other_id })
-    await User.update({ status: 0, user_other_id: -1 }, { id: uid })
+    await User.update({ status: 0, user_other_id: -1 }, { where: { id: user.user_other_id } })
+    await User.update({ status: 0, user_other_id: -1 }, { where: { id: uid } })
 
     // 清空双方的喜欢记录
-    await Note.update({ is_liked: 0 }, { user_id: [uid, user.user_other_id] })
+    await Note.update({ is_liked: 0 }, { where: { user_id: [uid, user.user_other_id] } })
 
     return res.json(MESSAGE.OK)
   }

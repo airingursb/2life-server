@@ -94,19 +94,21 @@ router.post('/register', (req, res) => {
       if (user) {
         return res.json(MESSAGE.USER_EXIST)
       } else {
+        const user_code = '0' + Math.floor((Math.random() * 89999 + 10000))
         const userinfo = {
           account,
           password: md5(password),
           sex: 0,
           name: account,
           user_other_id: -1,
-          code: '0' + Math.floor((Math.random() * 89999 + 10000)),
+          code: user_code,
           status: 502,
           last_times: 3,
           total_times: 0,
           total_notes: 0,
           badge_id: -1,
           badges: '',
+          ban_id: user_code + ',',
           face: 'https://airing.ursb.me/image/twolife/male.png'
         }
         await User.create(userinfo)
@@ -137,7 +139,7 @@ router.post('/login', (req, res) => {
     const token = md5Pwd((user.id).toString() + timestamp.toString() + KEY)
 
     let partner = {}
-    if (user.user_other_id !== -1 && user.status === 1) {
+    if (user.user_other_id !== -1 && user.status === 1000) {
       partner = await User.findOne({ where: { id: user.user_other_id }, include: [Badge] })
     }
 
@@ -208,13 +210,14 @@ router.get('/disconnect', (req, res) => {
     })
     await partner.increment('unread')
 
-    // TODO: 彼此加入匹配黑名单
+    let user_bans = user.ban_id + partner.code + ','
+    let partner_bans = partner.ban_id + user.code + ','
 
     // 用户状态变为解除后的临界状态
     // 需要用户在匹配页面重新设置状态
     // 否则无法被匹配到
-    await User.update({ status: 0, user_other_id: -1 }, { where: { id: user.user_other_id } })
-    await User.update({ status: 0, user_other_id: -1 }, { where: { id: uid } })
+    await User.update({ status: 0, user_other_id: -1, ban_id: user_bans }, { where: { id: user.user_other_id } })
+    await User.update({ status: 0, user_other_id: -1, ban_id: partner_bans }, { where: { id: uid } })
 
     // 清空双方的喜欢记录
     await Note.update({ is_liked: 0 }, { where: { user_id: [uid, user.user_other_id] } })
@@ -227,8 +230,6 @@ router.get('/disconnect', (req, res) => {
 
 /* users/connect_by_random */
 router.get('/connect_by_random', (req, res) => {
-
-  // TODO: 不允许匹配自己
 
   const { uid, timestamp, token } = req.query
   validate(res, true, uid, timestamp, token)
@@ -350,7 +351,12 @@ router.get('/connect_by_random', (req, res) => {
       break
     }
 
-    const candidates = await User.findAll({ where: condition })
+    const candidates = await User.findAll({
+      where: {
+        ...condition,
+        code: { '$notIn': user.ban_id.split(',') }
+      }
+    })
 
     if (!candidates[0]) return res.json(MESSAGE.USER_NOT_EXIST)
 
@@ -399,8 +405,6 @@ router.get('/connect_by_random', (req, res) => {
 /* users/connect_by_id */
 router.get('/connect_by_id', (req, res) => {
 
-  // TODO: 不允许匹配自己
-
   const { uid, timestamp, token, code } = req.query
   validate(res, true, uid, timestamp, token, code)
 
@@ -408,6 +412,10 @@ router.get('/connect_by_id', (req, res) => {
     const user = await User.findOne({ where: { id: uid } })
     const partner = await User.findOne({ where: { code } })
 
+    // 不允许匹配自己
+    if (user.code === code) {
+      return res.json(MESSAGE.USER_NOT_EXIST)
+    }
     if (!partner) {
       return res.json(MESSAGE.USER_NOT_EXIST)
     }

@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
 
-  const { STRING, INTEGER, DOUBLE } = DataTypes
+  const { STRING, INTEGER, DOUBLE, TEXT } = DataTypes
 
   return sequelize.define('user', {
     'code': STRING(45),
@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
     'connect_at': DOUBLE,
     'openid': STRING(45),
     'user_other_id': INTEGER,
-    'ban_id': STRING(1500),
+    'ban_id': TEXT,
     'unread': INTEGER,
     'latitude': DOUBLE,
     'longitude': DOUBLE,

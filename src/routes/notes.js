@@ -1,6 +1,6 @@
 import express from 'express'
 
-import { User, Note } from '../models'
+import { User, Note, Message } from '../models'
 
 import {
   MESSAGE,
@@ -82,8 +82,13 @@ router.post('/publish', (req, res) => {
       status: user.status
     })
 
-    await User.update({ mode: Math.floor(positive * 100) }, { where: { id: uid } })
-    await user.increment('total_notes')
+    let total_notes = user.total_notes
+    let total_modes = user.mode * total_notes
+
+    await User.update({
+      total_notes: total_notes + 1,
+      mode: Math.floor((total_modes + Math.floor(positive * 100)) / (total_notes + 1))
+    }, { where: { id: uid } })
 
     return res.json(MESSAGE.OK)
   }
@@ -238,7 +243,17 @@ router.post('/update', (req, res) => {
   validate(res, true, uid, timestamp, token, note_id, title, content, images, mode)
 
   const response = async () => {
+    const user = await User.findOne({ where: { id: uid } })
     await Note.update({ title, content, images, mode }, { where: { id: note_id } })
+
+    let total_notes = user.total_notes
+    let total_modes = user.mode * total_notes
+
+    await User.update({
+      total_notes: total_notes + 1,
+      mode: Math.floor((total_modes + Math.floor(positive * 100)) / (total_notes + 1))
+    }, { where: { id: uid } })
+
     return res.json(MESSAGE.OK)
   }
 

@@ -251,7 +251,7 @@ router.post('/update', (req, res) => {
 
     await User.update({
       total_notes: total_notes + 1,
-      mode: Math.floor((total_modes + Math.floor(positive * 100)) / (total_notes + 1))
+      mode: Math.floor((total_modes + mode) / (total_notes + 1))
     }, { where: { id: uid } })
 
     return res.json(MESSAGE.OK)

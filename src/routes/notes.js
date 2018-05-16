@@ -105,7 +105,7 @@ router.get('/delete', (req, res) => {
   const response = async () => {
     const user = await User.findOne({ where: { id: uid } })
     await Note.destroy({ where: { id: note_id } })
-    await user.decrement(total_notes)
+    await user.decrement('total_notes')
     return res.json(MESSAGE.OK)
   }
 

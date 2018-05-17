@@ -106,6 +106,7 @@ router.post('/register', (req, res) => {
           last_times: 3,
           total_times: 0,
           total_notes: 0,
+          mode: 0,
           badge_id: -1,
           badges: '',
           ban_id: user_code + ',',
@@ -250,7 +251,7 @@ router.get('/connect_by_random', (req, res) => {
       break
     case 101:
       condition = {
-        status: { 'lte': 501 },
+        status: { '$or': [111, 112, 113] },
         sex: 1,
         mode: user.mode > 50 ? { 'lte': 50 } : { 'gte': 50 },
         total_notes: { 'gte': 1 }
@@ -258,7 +259,7 @@ router.get('/connect_by_random', (req, res) => {
       break
     case 102:
       condition = {
-        status: { 'lte': 501 },
+        status: { '$or': [111, 112, 113] },
         sex: 1,
         mode: user.mode > 50 ? { 'gte': 50 } : { 'lte': 50 },
         total_notes: { 'gte': 1 }
@@ -266,14 +267,14 @@ router.get('/connect_by_random', (req, res) => {
       break
     case 103:
       condition = {
-        status: { 'lte': 501 },
+        status: { '$or': [111, 112, 113] },
         sex: 1,
         total_notes: { 'gte': 1 }
       }
       break
     case 111:
       condition = {
-        status: { 'lte': 501 },
+        status: { '$or': [101, 102, 103] },
         sex: 0,
         mode: user.mode > 50 ? { 'lte': 50 } : { 'gte': 50 },
         total_notes: { 'gte': 1 }
@@ -281,7 +282,7 @@ router.get('/connect_by_random', (req, res) => {
       break
     case 112:
       condition = {
-        status: { 'lte': 501 },
+        status: { '$or': [101, 102, 103] },
         sex: 0,
         mode: user.mode > 50 ? { 'gte': 50 } : { 'lte': 50 },
         total_notes: { 'gte': 1 }
@@ -289,14 +290,14 @@ router.get('/connect_by_random', (req, res) => {
       break
     case 113:
       condition = {
-        status: { 'lte': 501 },
+        status: { '$or': [101, 102, 103] },
         sex: 0,
         total_notes: { 'gte': 1 }
       }
       break
     case 201:
       condition = {
-        status: { 'lte': 501 },
+        status: { '$or': [201, 202, 203] },
         sex: 0,
         mode: user.mode > 50 ? { 'lte': 50 } : { 'gte': 50 },
         total_notes: { 'gte': 1 }
@@ -304,7 +305,7 @@ router.get('/connect_by_random', (req, res) => {
       break
     case 202:
       condition = {
-        status: { 'lte': 501 },
+        status: { '$or': [201, 202, 203] },
         sex: 0,
         mode: user.mode > 50 ? { 'gte': 50 } : { 'lte': 50 },
         total_notes: { 'gte': 1 }
@@ -312,14 +313,14 @@ router.get('/connect_by_random', (req, res) => {
       break
     case 203:
       condition = {
-        status: { 'lte': 501 },
+        status: { '$or': [211, 212, 213] },
         sex: 0,
         total_notes: { 'gte': 1 }
       }
       break
     case 211:
       condition = {
-        status: { 'lte': 501 },
+        status: { '$or': [211, 212, 213] },
         sex: 1,
         mode: user.mode > 50 ? { 'lte': 50 } : { 'gte': 50 },
         total_notes: { 'gte': 1 }
@@ -327,7 +328,7 @@ router.get('/connect_by_random', (req, res) => {
       break
     case 212:
       condition = {
-        status: { 'lte': 501 },
+        status: { '$or': [211, 212, 213] },
         sex: 1,
         mode: user.mode > 50 ? { 'gte': 50 } : { 'lte': 50 },
         total_notes: { 'gte': 1 }
@@ -335,7 +336,7 @@ router.get('/connect_by_random', (req, res) => {
       break
     case 213:
       condition = {
-        status: { 'lte': 501 },
+        status: { '$or': [201, 202, 203] },
         sex: 1,
         total_notes: { 'gte': 1 }
       }

@@ -483,7 +483,7 @@ router.get('/show_notification', (req, res) => {
   validate(res, true, uid, timestamp, token)
 
   const response = async () => {
-    const data = await Message.findAll({ where: { user_id: uid }, order: 'date DESC' })
+    const data = await Message.findAll({ where: { user_id: [uid, -1] }, order: 'date DESC' })
     await User.update({ unread: 0 }, { where: { id: uid } })
     return res.json({ ...MESSAGE.OK, data })
   }

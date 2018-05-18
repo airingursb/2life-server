@@ -60,7 +60,7 @@ router.post('/publish', (req, res) => {
         resolve(d)
         reject(err)
       })
-    }).catch((err) => console.log(err))
+    })
   }
 
   const response = async () => {
@@ -154,7 +154,7 @@ router.get('/list', (req, res) => {
 
     const u = await User.findOne({ where: { id: uid } })
 
-    if (u.status === 1000) {
+    if (u.user_other_id !== -1) {
       // 已匹配
       partner = await Note.findAll({ where: { user_id: u.user_other_id } })
     } else if (u.status < 200) {
@@ -250,7 +250,6 @@ router.post('/update', (req, res) => {
     let total_modes = user.mode * total_notes
 
     await User.update({
-      total_notes: total_notes + 1,
       mode: Math.floor((total_modes + mode) / (total_notes + 1))
     }, { where: { id: uid } })
 

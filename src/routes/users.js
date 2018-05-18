@@ -94,7 +94,7 @@ router.post('/register', (req, res) => {
       if (user) {
         return res.json(MESSAGE.USER_EXIST)
       } else {
-        const user_code = '0' + Math.floor((Math.random() * 89999 + 10000))
+        const user_code = '0' + Math.floor((Math.random() * 89999 + 10000)) // TODO: 可能重复
         const userinfo = {
           account,
           password: md5(password),
@@ -107,6 +107,7 @@ router.post('/register', (req, res) => {
           total_times: 0,
           total_notes: 0,
           mode: 0,
+          rate: 0,
           badge_id: -1,
           badges: '',
           ban_id: user_code + ',',
@@ -166,10 +167,20 @@ router.get('/user', (req, res) => {
   const response = async () => {
     const user = await User.findOne({ where: { id: user_id }, include: [Badge] })
     if (!user) return res.json(MESSAGE.USER_NOT_EXIST)
-    return res.json({
-      ...MESSAGE.OK,
-      data: { ...user.dataValues, password: 0 }
-    })
+    const partner = await User.findOne({ where: { id: user.user_other_id } })
+    if (partner) {
+      return res.json({
+        ...MESSAGE.OK,
+        data: { ...user.dataValues, password: 0 },
+        partner: { ...partner.dataValues, password: 0 }
+      })
+    } else {
+      return res.json({
+        ...MESSAGE.OK,
+        data: { ...user.dataValues, password: 0 },
+        partner: {}
+      })
+    }
   }
 
   response()
@@ -366,10 +377,10 @@ router.get('/connect_by_random', (req, res) => {
     if (user.last_times === 1) {
       await User.update({ status: 501, user_other_id: partner.id, connect_at: Date.now() }, { where: { id: uid } })
     } else {
-      await User.update({ status: 1000, user_other_id: partner.id }, { where: { id: uid } })
+      await User.update({ status: 1000, user_other_id: partner.id, connect_at: Date.now() }, { where: { id: uid } })
     }
 
-    await User.update({ status: 1000, user_other_id: uid }, { where: { id: partner.id } })
+    await User.update({ status: 1000, user_other_id: uid, connect_at: Date.now() }, { where: { id: partner.id } })
 
     /**
      * 匹配逻辑
@@ -429,16 +440,16 @@ router.get('/connect_by_id', (req, res) => {
       return res.json(MESSAGE.CONNECT_ERROR_BAN)
     if (user.status === 999 || partner.status === 999)
       return res.json(MESSAGE.CONNECT_ERROR_CLOSE)
-    if (user.status === 1000 || partner.status === 1000)
+    if (user.user_other_id !== -1 || partner.user_other_id !== -1)
       return res.json(MESSAGE.CONNECT_ERROR_ALREADY)
 
     if (user.last_times === 1) {
       await User.update({ status: 501, user_other_id: partner.id, connect_at: Date.now() }, { where: { id: uid } })
     } else {
-      await User.update({ status: 1000, user_other_id: partner.id }, { where: { id: uid } })
+      await User.update({ status: 1000, user_other_id: partner.id, connect_at: Date.now() }, { where: { id: uid } })
     }
 
-    await User.update({ status: 1000, user_other_id: uid }, { where: { id: partner.id } })
+    await User.update({ status: 1000, user_other_id: uid, connect_at: Date.now() }, { where: { id: partner.id } })
 
     await user.decrement('last_times')
     await user.increment('total_times')

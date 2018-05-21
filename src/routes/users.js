@@ -193,8 +193,31 @@ router.post('/update', (req, res) => {
   validate(res, true, uid, timestamp, token, sex, name, face, status, latitude, longitude, badge_id)
 
   const response = async () => {
+
     await User.update({ name, sex, face, status, latitude, longitude, badge_id, badges }, { where: { id: uid } })
-    return res.json(MESSAGE.OK)
+
+    const user = await User.findById(uid)
+    if (!user) return res.json(MESSAGE.USER_NOT_EXIST)
+
+    const partner = await User.findOne({ where: { id: user.user_other_id } })
+
+    if (partner) {
+      return res.json({
+        ...MESSAGE.OK,
+        data: {
+          user: { ...user.dataValues, password: 0 },
+          partner: { ...partner.dataValues, password: 0 }
+        }
+      })
+    } else {
+      return res.json({
+        ...MESSAGE.OK,
+        data: {
+          user: { ...user.dataValues, password: 0 },
+          partner: {}
+        }
+      })
+    }
   }
 
   response()

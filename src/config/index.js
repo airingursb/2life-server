@@ -74,18 +74,21 @@ export const MESSAGE = {
   },
 }
 
-export const KEY = ''
+export const KEY = 'airing'
 export const SQL_USER = 'root'
 export const SQL_PASSWORD = ''
 export const YUNPIAN_APIKEY = '' // 云片APIKEY
 export const QINIU_ACCESS = '' // 七牛ACCESS
 export const QINIU_SECRET = '' // 七牛SECRET
 export const BUCKET = '' // 七牛BUCKET
-export const ADMIN_USER = 'airing'
+export const ADMIN_USER = ''
 export const ADMIN_PASSWORD = ''
 export const NLP_ID = ''
 export const NLP_SECRET = ''
-
+export const WXP_APPID = '' // 小程序 ID
+export const WXP_SECRET = '' // 小程序 KEY
+export const WX_APP_APPID = '' // 开放平台 APP ID
+export const WX_APP_APPSECRET = '' // 开放平台 APPSECRET
 
 const JPUSH_KEY = ''
 const JPUSH_SECRET = ''
@@ -116,7 +119,7 @@ export const JiGuangPush = (user_id, message) => {
 }
 
 export const md5Pwd = (password) => {
-  const salt = 'Airing_is_genius_3957x8yza6!@#IUHJh~~'
+  const salt = ''
   return md5(md5(password + salt))
 }
 

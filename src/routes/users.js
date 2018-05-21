@@ -11,6 +11,10 @@ import {
   MESSAGE,
   KEY,
   YUNPIAN_APIKEY,
+  WXP_APPID,
+  WXP_SECRET,
+  WX_APP_APPID,
+  WX_APP_APPSECRET,
   validate,
   md5Pwd,
   JiGuangPush
@@ -91,6 +95,7 @@ router.post('/register', (req, res) => {
     const code = await findCode()
     if (code) {
       const user = await User.findOne({ where: { account } })
+      await Code.update({ used: true }, { where: { account, code, timestamp } })
       if (user) {
         return res.json(MESSAGE.USER_EXIST)
       } else {
@@ -141,7 +146,7 @@ router.post('/login', (req, res) => {
     const token = md5Pwd((user.id).toString() + timestamp.toString() + KEY)
 
     let partner = {}
-    if (user.user_other_id !== -1 && user.status === 1000) {
+    if (user.user_other_id !== -1) {
       partner = await User.findOne({ where: { id: user.user_other_id }, include: [Badge] })
     }
 
@@ -577,6 +582,121 @@ router.get('/close_connection', (req, res) => {
   const response = async () => {
     await User.update({ status: 999 }, { where: { id: uid } })
     return res.json(MESSAGE.OK)
+  }
+
+  response()
+})
+
+/* users/oauth_login */
+router.post('oauth_login', (req, res) => {
+
+  const { code, type } = req.body
+  validate(res, false, code, type)
+
+  let options = {}
+
+  if (type === 'app') {
+    options = {
+      uri: 'https://api.weixin.qq.com/sns/oauth2/access_token',
+      qs: {
+        appid: WX_APP_APPID,
+        secret: WX_APP_APPSECRET,
+        code,
+        grant_type: 'authorization_code'
+      },
+      json: true
+    }
+  } else if (type === 'wxp') {
+    options = {
+      uri: 'https://api.weixin.qq.com/sns/jscode2session',
+      qs: {
+        appid: WXP_APPID,
+        secret: WXP_SECRET,
+        js_code: code,
+        grant_type: 'authorization_code'
+      },
+      json: true
+    }
+  }
+
+  const response = async () => {
+
+    const data = await rp(options)
+    const { openid } = data
+
+    const user = await User.findOne({ where: { openid }, include: [Badge] })
+
+    if (user) {
+      const timestamp = Date.now()
+      const token = md5Pwd((user.id).toString() + timestamp.toString() + KEY)
+
+      let partner = {}
+      if (user.user_other_id !== -1) {
+        partner = await User.findOne({ where: { id: user.user_other_id }, include: [Badge] })
+      }
+
+      return res.json({
+        ...MESSAGE.OK,
+        data: {
+          user: { ...user.dataValues, password: 0 },
+          key: { uid: user.id, token, timestamp },
+          partner: { ...partner.dataValues, password: 0 }
+        }
+      })
+    } else {
+      // 如果用户不存在，提示前端跳转绑定页面
+      return res.json({
+        ...MESSAGE.USER_NOT_EXIST,
+        data: openid
+      })
+    }
+  }
+
+  response()
+})
+
+/* users/bind_account */
+router.post('bind_account', (req, res) => {
+  const { code, account, openid } = req.body
+  validate(res, false, code, account, openid)
+
+  const response = async () => {
+    const code = await Code.findOne({ where: { account, code, timestamp, used: false } })
+    if (code) {
+      const user = await User.findOne({ where: { account } })
+      if (user) {
+        // 如果用户存在，就直接绑定
+        await User.update({ openid }, { where: { account } })
+        return res.json(MESSAGE.OK)
+      } else {
+        // 如果用户不存在，则先注册再绑定
+        const user_code = '0' + Math.floor((Math.random() * 89999 + 10000)) // TODO: 可能重复
+        const userinfo = {
+          account,
+          password: md5(Date.now()),
+          sex: 0,
+          name: account,
+          user_other_id: -1,
+          code: user_code,
+          status: 502,
+          last_times: 3,
+          total_times: 0,
+          total_notes: 0,
+          mode: 0,
+          rate: 0,
+          badge_id: -1,
+          badges: '',
+          ban_id: user_code + ',',
+          openid,
+          face: 'https://airing.ursb.me/image/twolife/male.png'
+        }
+        await User.create(userinfo)
+        // 提示前端需要完成后续步骤：补充性别与昵称
+        return res.json({ ...MESSAGE.USER_NOT_EXIST, data: userinfo })
+      }
+    } else {
+      return res.json(MESSAGE.CODE_ERROR)
+    }
   }
 
   response()

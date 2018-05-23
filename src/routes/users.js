@@ -702,4 +702,78 @@ router.post('bind_account', (req, res) => {
   response()
 })
 
+/* users/wxp_login */
+router.post('wxp_login', (req, res) => {
+
+  // userInfo 可以为空，因为存在用户不同意授权的情况
+  // 登录凭证 code 获取 session_key 和 openid
+  const { code, userInfo } = req.body
+  validate(res, false, code)
+
+  let options = {
+    uri: 'https://api.weixin.qq.com/sns/jscode2session',
+    qs: {
+      appid: WXP_APPID,
+      secret: WXP_SECRET,
+      js_code: code,
+      grant_type: 'authorization_code'
+    },
+    json: true
+  }
+
+  const response = async () => {
+
+    const data = await rp(options)
+    const { openid } = data
+
+    const user = await User.findOne({ where: { openid }, include: [Badge] })
+
+    if (!user) {
+      // 如果用户不存在，若是初次登录就替用户注册
+
+      const info = JSON.parse(userInfo)
+      const user_code = '0' + Math.floor((Math.random() * 89999 + 10000)) // TODO: 可能重复
+
+      await User.create({
+        account: openid,
+        password: md5(Date.now()),
+        sex: !info.gender, // 微信登录 0女 1男 2未填写
+        name: info.nickName,
+        user_other_id: -1,
+        code: user_code,
+        status: 502,
+        last_times: 3,
+        total_times: 0,
+        total_notes: 0,
+        mode: 0,
+        rate: 0,
+        badge_id: -1,
+        badges: '',
+        ban_id: user_code + ',',
+        openid,
+        face: info.avatarUrl
+      })
+    }
+
+    const timestamp = Date.now()
+    const token = md5Pwd((user.id).toString() + timestamp.toString() + KEY)
+
+    let partner = {}
+    if (user.user_other_id !== -1) {
+      partner = await User.findOne({ where: { id: user.user_other_id }, include: [Badge] })
+    }
+
+    return res.json({
+      ...MESSAGE.OK,
+      data: {
+        user: { ...user.dataValues, password: 0 },
+        key: { uid: user.id, token, timestamp },
+        partner: { ...partner.dataValues, password: 0 }
+      }
+    })
+  }
+
+  response()
+})
+
 module.exports = router

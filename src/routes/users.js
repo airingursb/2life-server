@@ -838,7 +838,21 @@ router.post('feedback', (req, res) => {
       type,
       user_id: uid
     })
-    await rp(options) // 此处请求时间太长
+    await rp(options) // 此处请求时间太长，前端可以不必等待响应
+    return res.json(MESSAGE.OK)
+  }
+
+  response()
+})
+
+/* users/delete_notification */
+router.get('delete_notification', (req, res) => {
+
+  const { uid, token, timestamp, message_id } = req.query
+  validate(res, false, uid, token, timestamp, message_id)
+
+  const response = async () => {
+    await Message.destroy({ where: { id: message_id } })
     return res.json(MESSAGE.OK)
   }
 

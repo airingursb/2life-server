@@ -4,7 +4,8 @@ module.exports = (sequelize, DataTypes) => {
 
   return sequelize.define('feedback', {
     'user_id': INTEGER,
-    'contact': STRING(135),
+    'title': STRING(135),
     'content': TEXT,
+    'type': INTEGER
   })
 }

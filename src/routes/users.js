@@ -1,6 +1,6 @@
 import express from 'express'
 
-import { User, Code, Message, Note, Badge } from '../models'
+import { User, Code, Message, Note, Badge, Feedback } from '../models'
 
 import md5 from 'md5'
 
@@ -15,6 +15,7 @@ import {
   WXP_SECRET,
   WX_APP_APPID,
   WX_APP_APPSECRET,
+  GITHUB_TOKEN,
   validate,
   md5Pwd,
   JiGuangPush
@@ -88,14 +89,15 @@ router.post('/register', (req, res) => {
   validate(res, false, account, password, code, timestamp)
 
   const findCode = async () => {
-    return await Code.findOne({ where: { account, code, timestamp, used: false } })
+    return await Code.findOne({ where: { account, code, timestamp } })
   }
 
   const response = async () => {
     const code = await findCode()
     if (code) {
       const user = await User.findOne({ where: { account } })
-      await Code.update({ used: true }, { where: { account, code, timestamp } })
+      // TODO: 未知 bug
+      // await Code.update({ used: true }, { where: { account, code, timestamp } })
       if (user) {
         return res.json(MESSAGE.USER_EXIST)
       } else {
@@ -771,6 +773,73 @@ router.post('wxp_login', (req, res) => {
         partner: { ...partner.dataValues, password: 0 }
       }
     })
+  }
+
+  response()
+})
+
+/* users/feedback */
+router.post('feedback', (req, res) => {
+
+  const { uid, token, timestamp, title, content, type } = req.body
+  validate(res, false, uid, token, timestamp, title, content, type)
+
+  let labels = ['discussion']
+
+  switch (type) {
+  case 101:
+    labels = ['ios', 'bug']
+    break
+  case 102:
+    labels = ['android', 'bug']
+    break
+  case 103:
+    labels = ['微信小程序', 'bug']
+    break
+  case 200:
+    labels = ['feature request']
+    break
+  case 300:
+    break
+  default:
+    break
+  }
+
+  const response = async () => {
+
+    const user = await User.findById(uid)
+
+    const body = `
+    
+      ![${uid}](${user.face + '-46.jpg'}) ${user.name} 
+      
+      ---
+      
+      ${content}
+    `
+
+    let options = {
+      uri: 'https://api.github.com/repos/oh-bear/2life/issues',
+      method: 'POST',
+      body: {
+        title,
+        body,
+        labels
+      },
+      headers: {
+        'Authorization': 'token ' + GITHUB_TOKEN
+      },
+      json: true
+    }
+
+    await Feedback.create({
+      title,
+      content,
+      type,
+      user_id: uid
+    })
+    await rp(options) // 此处请求时间太长
+    return res.json(MESSAGE.OK)
   }
 
   response()

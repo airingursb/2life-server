@@ -728,7 +728,7 @@ router.post('wxp_login', (req, res) => {
     const data = await rp(options)
     const { openid } = data
 
-    const user = await User.findOne({ where: { openid }, include: [Badge] })
+    let user = await User.findOne({ where: { openid }, include: [Badge] })
 
     if (!user) {
       // 如果用户不存在，若是初次登录就替用户注册
@@ -755,6 +755,8 @@ router.post('wxp_login', (req, res) => {
         openid,
         face: info.avatarUrl
       })
+
+      user = await User.findOne({ where: { openid }, include: [Badge] })
     }
 
     const timestamp = Date.now()

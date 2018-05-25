@@ -123,7 +123,7 @@ router.post('/like', (req, res) => {
     const partner = await User.findOne({ where: { id: user.user_other_id } })
     await Note.update({ is_liked: 1 }, { where: { id: note_id } })
     // 通知对方被喜欢
-    JiGuangPush(user.user_other_id, '喜欢了你的日记，真是幸福的一天')
+    JiGuangPush(user.user_other_id, `${user.name} 喜欢了你的日记，真是幸福的一天`)
     await Message.create({
       title: `${user.name} 喜欢了你的日记，真是幸福的一天`,
       type: 203,

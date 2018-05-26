@@ -6,6 +6,7 @@ import md5 from 'md5'
 
 import https from 'https'
 import querystring from 'querystring'
+import rp from 'request-promise'
 
 import {
   MESSAGE,
@@ -589,8 +590,9 @@ router.get('/close_connection', (req, res) => {
   response()
 })
 
+
 /* users/oauth_login */
-router.post('oauth_login', (req, res) => {
+router.post('/oauth_login', (req, res) => {
 
   const { code, type } = req.body
   validate(res, false, code, type)
@@ -658,7 +660,7 @@ router.post('oauth_login', (req, res) => {
 })
 
 /* users/bind_account */
-router.post('bind_account', (req, res) => {
+router.post('/bind_account', (req, res) => {
   const { code, account, openid } = req.body
   validate(res, false, code, account, openid)
 
@@ -705,7 +707,7 @@ router.post('bind_account', (req, res) => {
 })
 
 /* users/wxp_login */
-router.post('wxp_login', (req, res) => {
+router.post('/wxp_login', (req, res) => {
 
   // userInfo 可以为空，因为存在用户不同意授权的情况
   // 登录凭证 code 获取 session_key 和 openid
@@ -733,7 +735,7 @@ router.post('wxp_login', (req, res) => {
     if (!user) {
       // 如果用户不存在，若是初次登录就替用户注册
 
-      const info = JSON.parse(userInfo)
+      const info = userInfo
       const user_code = '0' + Math.floor((Math.random() * 89999 + 10000)) // TODO: 可能重复
 
       await User.create({
@@ -766,13 +768,14 @@ router.post('wxp_login', (req, res) => {
     if (user.user_other_id !== -1) {
       partner = await User.findOne({ where: { id: user.user_other_id }, include: [Badge] })
     }
+    partner.password = 0
 
     return res.json({
       ...MESSAGE.OK,
       data: {
         user: { ...user.dataValues, password: 0 },
         key: { uid: user.id, token, timestamp },
-        partner: { ...partner.dataValues, password: 0 }
+        partner
       }
     })
   }
@@ -781,7 +784,7 @@ router.post('wxp_login', (req, res) => {
 })
 
 /* users/feedback */
-router.post('feedback', (req, res) => {
+router.post('/feedback', (req, res) => {
 
   const { uid, token, timestamp, title, content, type } = req.body
   validate(res, false, uid, token, timestamp, title, content, type)
@@ -848,7 +851,7 @@ router.post('feedback', (req, res) => {
 })
 
 /* users/delete_notification */
-router.get('delete_notification', (req, res) => {
+router.get('/delete_notification', (req, res) => {
 
   const { uid, token, timestamp, message_id } = req.query
   validate(res, false, uid, token, timestamp, message_id)

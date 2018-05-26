@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
     'password': STRING(45),
     'name': STRING(45),
     'sex': INTEGER,
-    'face': STRING(125),
+    'face': STRING(250),
     'status': INTEGER,
     'total_notes': INTEGER,
     'mode': DOUBLE,

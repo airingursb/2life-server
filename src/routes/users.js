@@ -832,7 +832,8 @@ router.post('/feedback', (req, res) => {
         labels
       },
       headers: {
-        'Authorization': 'token ' + GITHUB_TOKEN
+        'Authorization': 'token ' + GITHUB_TOKEN,
+        'User-Agent': '2life-APP'
       },
       json: true
     }

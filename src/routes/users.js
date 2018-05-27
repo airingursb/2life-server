@@ -665,41 +665,36 @@ router.post('/bind_account', (req, res) => {
   validate(res, false, code, account, openid)
 
   const response = async () => {
-    const code = await Code.findOne({ where: { account, code, timestamp, used: false } })
-    if (code) {
-      const user = await User.findOne({ where: { account } })
-      if (user) {
-        // 如果用户存在，就直接绑定
-        await User.update({ openid }, { where: { account } })
-        return res.json(MESSAGE.OK)
-      } else {
-        // 如果用户不存在，则先注册再绑定
-        const user_code = '0' + Math.floor((Math.random() * 89999 + 10000)) // TODO: 可能重复
-        const userinfo = {
-          account,
-          password: md5(Date.now()),
-          sex: 0,
-          name: account,
-          user_other_id: -1,
-          code: user_code,
-          status: 502,
-          last_times: 3,
-          total_times: 0,
-          total_notes: 0,
-          mode: 0,
-          rate: 0,
-          badge_id: -1,
-          badges: '',
-          ban_id: user_code + ',',
-          openid,
-          face: 'https://airing.ursb.me/image/twolife/male.png'
-        }
-        await User.create(userinfo)
-        // 提示前端需要完成后续步骤：补充性别与昵称
-        return res.json({ ...MESSAGE.USER_NOT_EXIST, data: userinfo })
-      }
+    const user = await User.findOne({ where: { account } })
+    if (user) {
+      // 如果用户存在，就直接绑定
+      await User.update({ openid }, { where: { account } })
+      return res.json(MESSAGE.OK)
     } else {
-      return res.json(MESSAGE.CODE_ERROR)
+      // 如果用户不存在，则先注册再绑定
+      const user_code = '0' + Math.floor((Math.random() * 89999 + 10000)) // TODO: 可能重复
+      const userinfo = {
+        account,
+        password: md5(Date.now()),
+        sex: 0,
+        name: account,
+        user_other_id: -1,
+        code: user_code,
+        status: 502,
+        last_times: 3,
+        total_times: 0,
+        total_notes: 0,
+        mode: 0,
+        rate: 0,
+        badge_id: -1,
+        badges: '',
+        ban_id: user_code + ',',
+        openid,
+        face: 'https://airing.ursb.me/image/twolife/male.png'
+      }
+      await User.create(userinfo)
+      // 提示前端需要完成后续步骤：补充性别与昵称
+      return res.json({ ...MESSAGE.USER_NOT_EXIST, data: userinfo })
     }
   }
 
@@ -814,14 +809,7 @@ router.post('/feedback', (req, res) => {
 
     const user = await User.findById(uid)
 
-    const body = `
-    
-      ![${uid}](${user.face + '-46.jpg'}) ${user.name} 
-      
-      ---
-      
-      ${content}
-    `
+    const body = `\n![${uid}](${user.face + '-46.jpg'}) ${user.name}\n---\n${content}`
 
     let options = {
       uri: 'https://api.github.com/repos/oh-bear/2life/issues',

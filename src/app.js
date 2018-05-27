@@ -8,10 +8,26 @@ import notes from './routes/notes'
 import modes from './routes/modes'
 import util from './routes/util'
 
+import log4js from 'log4js'
+
 const app = express()
 
+log4js.configure({
+  appenders: {
+    console: { type: 'console' },
+    file: { type: 'file', filename: 'logs/log4jsconnect.log' }
+  },
+  categories: {
+    default: { appenders: ['console'], level: 'info' },
+    log4jslog: { appenders: ['file'], level: 'info' }
+  }
+})
+
+const logger = log4js.getLogger('log4jslog')
+
+app.use(log4js.connectLogger(logger, { level: 'auto' }))
 app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({extended: false}))
+app.use(bodyParser.urlencoded({ extended: false }))
 
 app.use('/', index)
 app.use('/users', users)

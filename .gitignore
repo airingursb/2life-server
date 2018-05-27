@@ -59,6 +59,7 @@ typings/
 
 dist/
 .idea/
+logs/
 mochawesome-report/
 
 package-lock.json

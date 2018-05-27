@@ -661,11 +661,11 @@ router.post('/oauth_login', (req, res) => {
 
 /* users/bind_account */
 router.post('/bind_account', (req, res) => {
-  const { code, account, openid } = req.body
-  validate(res, false, code, account, openid)
+  const { account, openid } = req.body
+  validate(res, false, account, openid)
 
   const response = async () => {
-    const user = await User.findOne({ where: { account } })
+    let user = await User.findOne({ where: { account } })
     if (user) {
       // 如果用户存在，就直接绑定
       await User.update({ openid }, { where: { account } })
@@ -694,7 +694,14 @@ router.post('/bind_account', (req, res) => {
       }
       await User.create(userinfo)
       // 提示前端需要完成后续步骤：补充性别与昵称
-      return res.json({ ...MESSAGE.USER_NOT_EXIST, data: userinfo })
+      user = await User.findOne({ where: { openid } })
+      const timestamp = Date.now()
+      const token = md5Pwd((user.id).toString() + timestamp.toString() + KEY)
+      return res.json({
+        ...MESSAGE.USER_NOT_EXIST,
+        data: userinfo,
+        key: { uid: user.id, token, timestamp },
+      })
     }
   }
 

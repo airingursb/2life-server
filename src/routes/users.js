@@ -35,7 +35,7 @@ router.post('/code', (req, res) => {
 
   const postData = {
     mobile: account,
-    text: '【双生APP】您的验证码是' + code,
+    text: '【双生日记】您的验证码是' + code,
     apikey: YUNPIAN_APIKEY
   }
 

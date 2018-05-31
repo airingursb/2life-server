@@ -19,7 +19,8 @@ import {
   GITHUB_TOKEN,
   validate,
   md5Pwd,
-  JiGuangPush
+  JiGuangPush,
+  IS_CHECKING
 } from '../config'
 
 const router = express.Router()
@@ -778,7 +779,8 @@ router.post('/wxp_login', (req, res) => {
         user: { ...user.dataValues, password: 0 },
         key: { uid: user.id, token, timestamp },
         partner
-      }
+      },
+      is_checking: IS_CHECKING
     })
   }
 

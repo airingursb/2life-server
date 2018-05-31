@@ -91,6 +91,8 @@ export const WX_APP_APPID = '' // 开放平台 APP ID
 export const WX_APP_APPSECRET = '' // 开放平台 APPSECRET
 export const GITHUB_TOKEN = '' // Github token
 
+export const IS_CHECKING = true
+
 const JPUSH_KEY = ''
 const JPUSH_SECRET = ''
 

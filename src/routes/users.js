@@ -744,7 +744,7 @@ router.post('/wxp_login', (req, res) => {
       await User.create({
         account: openid,
         password: md5(Date.now()),
-        sex: !info.gender, // 微信登录 0女 1男 2未填写
+        sex: info.gender === 1 ? 0 : 1, // 微信登录 0未填写 1男 2女
         name: info.nickName,
         user_other_id: -1,
         code: user_code,

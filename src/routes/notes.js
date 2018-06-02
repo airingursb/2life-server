@@ -244,7 +244,7 @@ router.post('/update', (req, res) => {
 
   const response = async () => {
     const user = await User.findOne({ where: { id: uid } })
-    await Note.update({ title, content, images, mode }, { where: { id: note_id } })
+    await Note.update({ title, content, images, mode: Math.floor(mode) }, { where: { id: note_id } })
 
     let total_notes = user.total_notes
     let total_modes = user.mode * total_notes

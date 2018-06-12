@@ -862,4 +862,18 @@ router.get('/delete_notification', (req, res) => {
   response()
 })
 
+/* users/check_token */
+router.get('/check_token', (req, res) => {
+
+  const { uid, token, timestamp } = req.query
+
+  const response = async () => {
+    if (token !== md5Pwd(uid.toString() + timestamp.toString() + KEY))
+      return res.json(MESSAGE.TOKEN_ERROR)
+    return res.json(MESSAGE.OK)
+  }
+
+  response()
+})
+
 module.exports = router

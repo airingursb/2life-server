@@ -260,8 +260,21 @@ router.get('/disconnect', (req, res) => {
     // 用户状态变为解除后的临界状态
     // 需要用户在匹配页面重新设置状态
     // 否则无法被匹配到
-    await User.update({ status: 0, user_other_id: -1, ban_id: user_bans }, { where: { id: user.user_other_id } })
-    await User.update({ status: 0, user_other_id: -1, ban_id: partner_bans }, { where: { id: uid } })
+    // await User.update({ status: 0, user_other_id: -1, ban_id: user_bans }, { where: { id: user.user_other_id } })
+    // await User.update({ status: 0, user_other_id: -1, ban_id: partner_bans }, { where: { id: uid } })
+
+    // 2.0.5: 弱化匹配规则
+    if (partner.sex === 1) {
+      await User.update({ status: 113, user_other_id: -1, ban_id: user_bans }, { where: { id: user.user_other_id } })
+    } else {
+      await User.update({ status: 103, user_other_id: -1, ban_id: user_bans }, { where: { id: user.user_other_id } })
+    }
+
+    if (user.sex === 1) {
+      await User.update({ status: 113, user_other_id: -1, ban_id: partner_bans }, { where: { id: uid } })
+    } else {
+      await User.update({ status: 103, user_other_id: -1, ban_id: partner_bans }, { where: { id: uid } })
+    }
 
     // 清空双方的喜欢记录
     await Note.update({ is_liked: 0 }, { where: { user_id: [uid, user.user_other_id] } })
@@ -406,8 +419,9 @@ router.get('/connect_by_random', (req, res) => {
 
     const partner = candidates[Math.floor(Math.random() * candidates.length)]
 
-    if (user.last_times === 1) {
-      await User.update({ status: 501, user_other_id: partner.id, connect_at: Date.now() }, { where: { id: uid } })
+    if (user.last_times < 1) {
+      // await User.update({ status: 501, user_other_id: partner.id, connect_at: Date.now() }, { where: { id: uid } })
+      return res.json(MESSAGE.CONNECT_ERROR_NO_NOTE)
     } else {
       await User.update({ status: 1000, user_other_id: partner.id, connect_at: Date.now() }, { where: { id: uid } })
     }
@@ -475,8 +489,9 @@ router.get('/connect_by_id', (req, res) => {
     if (user.user_other_id !== -1 || partner.user_other_id !== -1)
       return res.json(MESSAGE.CONNECT_ERROR_ALREADY)
 
-    if (user.last_times === 1) {
-      await User.update({ status: 501, user_other_id: partner.id, connect_at: Date.now() }, { where: { id: uid } })
+    if (user.last_times < 1) {
+      // await User.update({ status: 501, user_other_id: partner.id, connect_at: Date.now() }, { where: { id: uid } })
+      return res.json(MESSAGE.CONNECT_ERROR_NO_NOTE)
     } else {
       await User.update({ status: 1000, user_other_id: partner.id, connect_at: Date.now() }, { where: { id: uid } })
     }

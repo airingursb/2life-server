@@ -1,7 +1,6 @@
 import express from 'express'
 import qiniu from 'qiniu'
-import { User, Note, Message } from '../models'
-import * as Model from '../models/util'
+import { Message } from '../models'
 
 import {
   QINIU_ACCESS,
@@ -49,29 +48,19 @@ router.get('/push_message', (req, res) => {
   response()
 })
 
-/* 后台获取日记 */
-router.post('/get_all_note', (req, res) => {
+/* 备份服务端日志 */
+router.post('/save_logs', (req, res) => {
 
   const {admin, password} = req.body
 
   validate(res, false, admin, password)
 
   const response = async () => {
-    const notes = await Model.findAll(Note, {}, [User])
 
     if (admin === ADMIN_USER && password === ADMIN_PASSWORD) {
 
-      const data = await notes.map(note => {
-        note.dataValues.note_title = note.dataValues.note_date < 1497780516378
-          ? note.dataValues.note_title
-          : new Buffer(note.dataValues.note_title, 'base64').toString()
-        note.dataValues.note_content = note.dataValues.note_date < 1497780516378
-          ? note.dataValues.note_content
-          : new Buffer(note.dataValues.note_content, 'base64').toString()
-        return {...note.dataValues}
-      })
 
-      return res.json({...MESSAGE.OK, data})
+      return res.json(MESSAGE.OK)
     }
   }
 

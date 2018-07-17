@@ -91,7 +91,7 @@ router.post('/register', (req, res) => {
   validate(res, false, account, password, code, timestamp)
 
   const findCode = async () => {
-    return await Code.findOne({ where: { account, code, timestamp } })
+    return await Code.findOne({ where: { code, timestamp } })
   }
 
   const response = async () => {
@@ -883,8 +883,25 @@ router.get('/check_token', (req, res) => {
   const { uid, token, timestamp } = req.query
 
   const response = async () => {
-    if (token !== md5Pwd(uid.toString() + timestamp.toString() + KEY))
+    if (token !== md5Pwd(uid.toString() + timestamp.toString() + KEY)) {
       return res.json(MESSAGE.TOKEN_ERROR)
+    }
+    return res.json(MESSAGE.OK)
+  }
+
+  response()
+})
+
+/* users/check_uid */
+router.get('/check_uid', (req, res) => {
+
+  const { uid } = req.query
+
+  const response = async () => {
+    const user = await User.findOne({ where: { id: uid } })
+    if (!user) {
+      return res.json(MESSAGE.USER_NOT_EXIST)
+    }
     return res.json(MESSAGE.OK)
   }
 

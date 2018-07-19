@@ -78,7 +78,7 @@ router.post('/publish', (req, res) => {
       location,
       is_liked: 0,
       mode: Math.floor(positive * 100),
-      date: Date.now(),
+      date: req.body.date || Date.now(),
       status: user.status
     })
 

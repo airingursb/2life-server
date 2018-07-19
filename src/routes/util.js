@@ -1,5 +1,7 @@
 import express from 'express'
 import qiniu from 'qiniu'
+import crypto from 'crypto'
+
 import { Message } from '../models'
 
 import {
@@ -10,7 +12,10 @@ import {
   ADMIN_USER,
   ADMIN_PASSWORD,
   validate,
-  JiGuangPush
+  JiGuangPush,
+  QCLOUD_APPID,
+  QCLOUD_SECRETID,
+  QCLOUD_SECRETKEY
 } from '../config/index'
 
 const router = express.Router()
@@ -27,6 +32,25 @@ router.get('/qiniu_token', (req, res) => {
   const data = putPolicy.token()
 
   return res.json({...MESSAGE.OK, data})
+})
+
+/* 获取 OCR 签名*/
+router.get('/get_ocr_sign', (req, res) => {
+
+  const {uid, timestamp, token} = req.query
+  validate(res, true, uid, timestamp, token)
+
+  const currentTime = Math.round(Date.now() / 1000)
+  const expiredTime = currentTime + 30 * 24 * 60 * 60
+  const rand = Math.round(Math.random() * (2 ** 32))
+  const origin = `a=${QCLOUD_APPID}&k=${QCLOUD_SECRETID}&e=${expiredTime}&t=${currentTime}&r=${rand}`
+
+  const data = Buffer.from(origin, 'utf8')
+  const signTmp = crypto.createHmac('sha1', QCLOUD_SECRETKEY).update(data).digest()
+  const bin = Buffer.concat([signTmp, data])
+  const sign = Buffer.from(bin).toString('base64')
+
+  return res.json({...MESSAGE.OK, data: sign})
 })
 
 /* 后台发送通知 */

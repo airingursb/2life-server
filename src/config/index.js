@@ -90,8 +90,11 @@ export const WXP_SECRET = '' // 小程序 KEY
 export const WX_APP_APPID = '' // 开放平台 APP ID
 export const WX_APP_APPSECRET = '' // 开放平台 APPSECRET
 export const GITHUB_TOKEN = '' // Github token
+export const QCLOUD_APPID = '' // 腾讯云 APPID
+export const QCLOUD_SECRETID = '' // 腾讯云 SECRETID
+export const QCLOUD_SECRETKEY = '' // 腾讯云 SECRETKEY
 
-export const IS_CHECKING = true
+export const IS_CHECKING = false
 
 const JPUSH_KEY = ''
 const JPUSH_SECRET = ''

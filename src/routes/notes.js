@@ -1,4 +1,5 @@
 import express from 'express'
+import fetch from 'node-fetch'
 
 import { User, Note, Message } from '../models'
 
@@ -77,9 +78,9 @@ router.post('/publish', (req, res) => {
       latitude,
       location,
       is_liked: 0,
-      mode: Math.floor(positive * 100),
+      mode: req.body.mode || Math.floor(positive * 100),
       date: req.body.date || Date.now(),
-      status: user.status
+      status: req.body.status || user.status
     })
 
     let total_notes = user.total_notes
@@ -224,13 +225,50 @@ router.get('/show_by_time', (req, res) => {
 })
 
 /* notes/sync */
-router.post('/sync', (req, res) => {
+router.get('/sync', (req, res) => {
 
-  const { uid, timestamp, token, data } = req.body
-  validate(res, true, uid, timestamp, token, data)
+  const { uid, timestamp, token, synctime } = req.body
+  validate(res, true, uid, timestamp, token, synctime)
 
   const response = async () => {
-    return res.json({ ...MESSAGE.OK, data })
+
+    // 从七牛云上拉取json文件
+    const response = await fetch(`https://airing.ursb.me/2life/file/${uid}_${synctime}.json`)
+    const json = await response.json()
+
+    // 根据操作符op同步数据库
+    // 0: 未改动，1: 增加，2: 更改，3: 删除
+    const diaryList = json.diaryList
+    let diaryListAdd = diaryList.filter(item => {
+      return item.op === 1
+    })
+
+    let diaryListUpdate = diaryList.filter(item => {
+      return item.op === 2
+    })
+
+    let diaryListDelete = diaryList.filter(item => {
+      return item.op === 3
+    })
+
+
+    if (diaryListAdd && diaryListAdd.length > 0) {
+      await Note.bulkCreate(diaryListAdd)
+    }
+
+    if (diaryListUpdate && diaryListUpdate.length > 0) {
+      for (let i = 0; i < diaryListUpdate.length; i++) {
+        await Note.update(diaryListUpdate[i], { where: { id: diaryListUpdate[i].id } })
+      }
+    }
+
+    if (diaryListDelete && diaryListDelete.length > 0) {
+      for (let i = 0; i < diaryListDelete.length; i++) {
+        await Note.destroy({ where: { id: diaryListDelete[i].id } })
+      }
+    }
+
+    return res.json(MESSAGE.OK)
   }
 
   response()
@@ -258,6 +296,5 @@ router.post('/update', (req, res) => {
 
   response()
 })
-
 
 module.exports = router

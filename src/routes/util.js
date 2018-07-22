@@ -15,8 +15,21 @@ import {
   JiGuangPush,
   QCLOUD_APPID,
   QCLOUD_SECRETID,
-  QCLOUD_SECRETKEY
+  QCLOUD_SECRETKEY,
+  NLP_ID,
+  NLP_SECRET
 } from '../config/index'
+
+import Promise from 'Promise'
+
+import Capi from 'qcloudapi-sdk'
+
+const capi = new Capi({
+  SecretId: NLP_ID,
+  SecretKey: NLP_SECRET,
+  serviceType: 'wenzhi'
+})
+
 
 const router = express.Router()
 qiniu.conf.ACCESS_KEY = QINIU_ACCESS
@@ -25,19 +38,19 @@ qiniu.conf.SECRET_KEY = QINIU_SECRET
 /* 获取七牛token */
 router.get('/qiniu_token', (req, res) => {
 
-  const {uid, timestamp, token, filename} = req.query
+  const { uid, timestamp, token, filename } = req.query
   validate(res, true, uid, timestamp, token, filename)
 
   const putPolicy = new qiniu.rs.PutPolicy(BUCKET + ':' + filename)
   const data = putPolicy.token()
 
-  return res.json({...MESSAGE.OK, data})
+  return res.json({ ...MESSAGE.OK, data })
 })
 
 /* 获取 OCR 签名*/
 router.get('/get_ocr_sign', (req, res) => {
 
-  const {uid, timestamp, token} = req.query
+  const { uid, timestamp, token } = req.query
   validate(res, true, uid, timestamp, token)
 
   const currentTime = Math.round(Date.now() / 1000)
@@ -50,7 +63,46 @@ router.get('/get_ocr_sign', (req, res) => {
   const bin = Buffer.concat([signTmp, data])
   const sign = Buffer.from(bin).toString('base64')
 
-  return res.json({...MESSAGE.OK, data: sign})
+  return res.json({ ...MESSAGE.OK, data: sign })
+})
+
+/* NLP 情感分析接口 */
+router.post('/get_nlp_result', (req, res) => {
+
+  const { uid, timestamp, token, content } = req.body
+  validate(res, true, uid, timestamp, token)
+
+  const callApi = () => {
+    return new Promise((resolve, reject) => {
+      capi.request({
+        Region: 'gz',
+        Action: 'TextSentiment',
+        content
+      }, (err, d) => {
+        resolve(d)
+        reject(err)
+      })
+    })
+  }
+
+  const response = async () => {
+    const data = await callApi()
+    const { positive } = data
+
+    const user = await User.findOne({ where: { id: uid } })
+
+    let total_notes = user.total_notes
+    let total_modes = user.mode * total_notes
+
+    await User.update({
+      total_notes: total_notes + 1,
+      mode: Math.floor((total_modes + Math.floor(positive * 100)) / (total_notes + 1))
+    }, { where: { id: uid } })
+
+    return res.json({ ...MESSAGE.OK, data: positive })
+  }
+
+  response()
 })
 
 /* 后台发送通知 */
@@ -75,7 +127,7 @@ router.get('/push_message', (req, res) => {
 /* 备份服务端日志 */
 router.post('/save_logs', (req, res) => {
 
-  const {admin, password} = req.body
+  const { admin, password } = req.body
 
   validate(res, false, admin, password)
 

@@ -227,7 +227,7 @@ router.get('/show_by_time', (req, res) => {
 /* notes/sync */
 router.get('/sync', (req, res) => {
 
-  const { uid, timestamp, token, synctime } = req.body
+  const { uid, timestamp, token, synctime } = req.query
   validate(res, true, uid, timestamp, token, synctime)
 
   const response = async () => {
@@ -268,7 +268,9 @@ router.get('/sync', (req, res) => {
       }
     }
 
-    return res.json(MESSAGE.OK)
+    const data = await Note.findAll({ where: { user_id: uid } })
+
+    return res.json({ ...MESSAGE.OK, data })
   }
 
   response()

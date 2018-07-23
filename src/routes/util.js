@@ -2,7 +2,7 @@ import express from 'express'
 import qiniu from 'qiniu'
 import crypto from 'crypto'
 
-import { Message } from '../models'
+import { User, Message } from '../models'
 
 import {
   QINIU_ACCESS,

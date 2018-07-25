@@ -17,12 +17,17 @@ import {
   QCLOUD_SECRETID,
   QCLOUD_SECRETKEY,
   NLP_ID,
-  NLP_SECRET
+  NLP_SECRET,
+  WXP_APPID,
+  WXP_SECRET
 } from '../config/index'
 
 import Promise from 'Promise'
 
+import rp from 'request-promise'
+
 import Capi from 'qcloudapi-sdk'
+import { YUNPIAN_APIKEY } from "../config";
 
 const capi = new Capi({
   SecretId: NLP_ID,
@@ -102,6 +107,29 @@ router.post('/get_nlp_result', (req, res) => {
     return res.json({ ...MESSAGE.OK, data: positive })
   }
 
+  response()
+})
+
+/* 小程序获取access_token
+* 文档：https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140183
+*/
+router.get('/access_token', (req, res) => {
+  const { uid, timestamp, token } = req.query
+  validate(res, true, uid, timestamp, token)
+
+  const response = async () => {
+    const options = {
+      uri: 'https://api.weixin.qq.com/cgi-bin/token',
+      qs: {
+        grant_type: 'client_credential',
+        appid: WXP_APPID,
+        secret: WXP_SECRET
+      },
+      json: true
+    }
+    const data = await rp(options)
+    return res.json({ ...MESSAGE.OK, data: { ...data, timestamp: Date.now() } })
+  }
   response()
 })
 

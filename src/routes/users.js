@@ -299,113 +299,113 @@ router.get('/connect_by_random', (req, res) => {
 
     // status 的意义详见数据字典
     switch (user.status) {
-    case 999:
-      return res.json(MESSAGE.CONNECT_ERROR_CLOSE)
-      break
-    case 1000:
-      return res.json(MESSAGE.CONNECT_ERROR_ALREADY)
-      break
-    case 101:
-      condition = {
-        status: { '$or': [111, 112, 113] },
-        sex: 1,
-        mode: user.mode > 50 ? { 'lte': 50 } : { 'gte': 50 },
-        total_notes: { 'gte': 1 }
-      }
-      break
-    case 102:
-      condition = {
-        status: { '$or': [111, 112, 113] },
-        sex: 1,
-        mode: user.mode > 50 ? { 'gte': 50 } : { 'lte': 50 },
-        total_notes: { 'gte': 1 }
-      }
-      break
-    case 103:
-      condition = {
-        status: { '$or': [111, 112, 113] },
-        sex: 1,
-        total_notes: { 'gte': 1 }
-      }
-      break
-    case 111:
-      condition = {
-        status: { '$or': [101, 102, 103] },
-        sex: 0,
-        mode: user.mode > 50 ? { 'lte': 50 } : { 'gte': 50 },
-        total_notes: { 'gte': 1 }
-      }
-      break
-    case 112:
-      condition = {
-        status: { '$or': [101, 102, 103] },
-        sex: 0,
-        mode: user.mode > 50 ? { 'gte': 50 } : { 'lte': 50 },
-        total_notes: { 'gte': 1 }
-      }
-      break
-    case 113:
-      condition = {
-        status: { '$or': [101, 102, 103] },
-        sex: 0,
-        total_notes: { 'gte': 1 }
-      }
-      break
-    case 201:
-      condition = {
-        status: { '$or': [201, 202, 203] },
-        sex: 0,
-        mode: user.mode > 50 ? { 'lte': 50 } : { 'gte': 50 },
-        total_notes: { 'gte': 1 }
-      }
-      break
-    case 202:
-      condition = {
-        status: { '$or': [201, 202, 203] },
-        sex: 0,
-        mode: user.mode > 50 ? { 'gte': 50 } : { 'lte': 50 },
-        total_notes: { 'gte': 1 }
-      }
-      break
-    case 203:
-      condition = {
-        status: { '$or': [211, 212, 213] },
-        sex: 0,
-        total_notes: { 'gte': 1 }
-      }
-      break
-    case 211:
-      condition = {
-        status: { '$or': [211, 212, 213] },
-        sex: 1,
-        mode: user.mode > 50 ? { 'lte': 50 } : { 'gte': 50 },
-        total_notes: { 'gte': 1 }
-      }
-      break
-    case 212:
-      condition = {
-        status: { '$or': [211, 212, 213] },
-        sex: 1,
-        mode: user.mode > 50 ? { 'gte': 50 } : { 'lte': 50 },
-        total_notes: { 'gte': 1 }
-      }
-      break
-    case 213:
-      condition = {
-        status: { '$or': [201, 202, 203] },
-        sex: 1,
-        total_notes: { 'gte': 1 }
-      }
-      break
-    case 501:
-      return res.json(MESSAGE.CONNECT_ERROR_NO_TIME)
-      break
-    case 502:
-      return res.json(MESSAGE.CONNECT_ERROR_NO_NOTE)
-      break
-    default:
-      return res.json(MESSAGE.CONNECT_ERROR_BAN)
-      break
+      case 999:
+        return res.json(MESSAGE.CONNECT_ERROR_CLOSE)
+        break
+      case 1000:
+        return res.json(MESSAGE.CONNECT_ERROR_ALREADY)
+        break
+      case 101:
+        condition = {
+          status: { '$or': [111, 112, 113] },
+          sex: 1,
+          mode: user.mode > 50 ? { 'lte': 50 } : { 'gte': 50 },
+          total_notes: { 'gte': 1 }
+        }
+        break
+      case 102:
+        condition = {
+          status: { '$or': [111, 112, 113] },
+          sex: 1,
+          mode: user.mode > 50 ? { 'gte': 50 } : { 'lte': 50 },
+          total_notes: { 'gte': 1 }
+        }
+        break
+      case 103:
+        condition = {
+          status: { '$or': [111, 112, 113] },
+          sex: 1,
+          total_notes: { 'gte': 1 }
+        }
+        break
+      case 111:
+        condition = {
+          status: { '$or': [101, 102, 103] },
+          sex: 0,
+          mode: user.mode > 50 ? { 'lte': 50 } : { 'gte': 50 },
+          total_notes: { 'gte': 1 }
+        }
+        break
+      case 112:
+        condition = {
+          status: { '$or': [101, 102, 103] },
+          sex: 0,
+          mode: user.mode > 50 ? { 'gte': 50 } : { 'lte': 50 },
+          total_notes: { 'gte': 1 }
+        }
+        break
+      case 113:
+        condition = {
+          status: { '$or': [101, 102, 103] },
+          sex: 0,
+          total_notes: { 'gte': 1 }
+        }
+        break
+      case 201:
+        condition = {
+          status: { '$or': [201, 202, 203] },
+          sex: 0,
+          mode: user.mode > 50 ? { 'lte': 50 } : { 'gte': 50 },
+          total_notes: { 'gte': 1 }
+        }
+        break
+      case 202:
+        condition = {
+          status: { '$or': [201, 202, 203] },
+          sex: 0,
+          mode: user.mode > 50 ? { 'gte': 50 } : { 'lte': 50 },
+          total_notes: { 'gte': 1 }
+        }
+        break
+      case 203:
+        condition = {
+          status: { '$or': [211, 212, 213] },
+          sex: 0,
+          total_notes: { 'gte': 1 }
+        }
+        break
+      case 211:
+        condition = {
+          status: { '$or': [211, 212, 213] },
+          sex: 1,
+          mode: user.mode > 50 ? { 'lte': 50 } : { 'gte': 50 },
+          total_notes: { 'gte': 1 }
+        }
+        break
+      case 212:
+        condition = {
+          status: { '$or': [211, 212, 213] },
+          sex: 1,
+          mode: user.mode > 50 ? { 'gte': 50 } : { 'lte': 50 },
+          total_notes: { 'gte': 1 }
+        }
+        break
+      case 213:
+        condition = {
+          status: { '$or': [201, 202, 203] },
+          sex: 1,
+          total_notes: { 'gte': 1 }
+        }
+        break
+      case 501:
+        return res.json(MESSAGE.CONNECT_ERROR_NO_TIME)
+        break
+      case 502:
+        return res.json(MESSAGE.CONNECT_ERROR_NO_NOTE)
+        break
+      default:
+        return res.json(MESSAGE.CONNECT_ERROR_BAN)
+        break
     }
 
     const candidates = await User.findAll({
@@ -811,22 +811,22 @@ router.post('/feedback', (req, res) => {
   let labels = ['discussion']
 
   switch (type) {
-  case 101:
-    labels = ['ios', 'bug']
-    break
-  case 102:
-    labels = ['android', 'bug']
-    break
-  case 103:
-    labels = ['微信小程序', 'bug']
-    break
-  case 200:
-    labels = ['feature request']
-    break
-  case 300:
-    break
-  default:
-    break
+    case 101:
+      labels = ['ios', 'bug']
+      break
+    case 102:
+      labels = ['android', 'bug']
+      break
+    case 103:
+      labels = ['微信小程序', 'bug']
+      break
+    case 200:
+      labels = ['feature request']
+      break
+    case 300:
+      break
+    default:
+      break
   }
 
   const response = async () => {
@@ -903,6 +903,35 @@ router.get('/check_uid', (req, res) => {
       return res.json(MESSAGE.USER_NOT_EXIST)
     }
     return res.json(MESSAGE.OK)
+  }
+
+  response()
+})
+
+
+/* 通过量表计算用户性格基础
+ * content = '0,1,0,1,1,1,0,0,0,1,1,1'
+ */
+router.post('/calculate_emotion', (req, res) => {
+  const { uid, timestamp, token, content } = req.body
+  validate(res, true, uid, timestamp, token)
+
+  const response = async () => {
+    const answerE = (content.substring(0, 5)).split(',')
+    const answerC = (content.substring(6, 11)).split(',')
+    const answerO = (content.substring(12, 17)).split(',')
+    const answerN = (content.substring(18, 22)).split(',')
+
+    const e = (answerE[0] * 0.751 + answerE[1] * 0.686 + answerE[2] * 0.673) / 3
+    const c = (answerC[0] * 0.571 + answerC[1] * 0.707 + answerC[2] * 0.674) / 3
+    const o = (answerO[0] * 0.619 + answerO[1] * 0.704 + answerO[2] * 0.641) / 3
+    const n = (answerN[0] * 0.628 + answerN[1] * 0.708 + answerN[2] * 0.713) / 3
+
+    const emotions = e + ',' + c + ',' + o + ',' + n
+
+    await User.update({ emotions }, { where: { id: uid } })
+
+    return res.json({ ...MESSAGE.OK, data: emotions })
   }
 
   response()

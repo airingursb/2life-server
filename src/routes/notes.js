@@ -23,7 +23,9 @@ const capi = new Capi({
 
 const router = express.Router()
 
-/* notes/publish */
+/* notes/publish
+ * 该接口弃用，仅用于兼容2.0.8以下版本（20180726）
+ */
 router.post('/publish', (req, res) => {
 
   const {

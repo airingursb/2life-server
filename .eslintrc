@@ -28,7 +28,10 @@
     ],
     "indent": [
       "error",
-      2
+      2,
+      {
+        "SwitchCase": 1
+      }
     ],
     "space-infix-ops": 2,
     "comma-spacing": 2,

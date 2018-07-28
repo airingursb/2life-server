@@ -926,16 +926,16 @@ router.post('/calculate_emotion', (req, res) => {
     const answerO = (content.substring(12, 17)).split(',')
     const answerN = (content.substring(18, 22)).split(',')
 
-    const e = ((answerE[0] * 0.751 + answerE[1] * 0.686 + answerE[2] * 0.673) / 3).toFixed(8)
-    const c = ((answerC[0] * 0.571 + answerC[1] * 0.707 + answerC[2] * 0.674) / 3).toFixed(8)
-    const o = ((answerO[0] * 0.619 + answerO[1] * 0.704 + answerO[2] * 0.641) / 3).toFixed(8)
-    const n = ((answerN[0] * 0.628 + answerN[1] * 0.708 + answerN[2] * 0.713) / 3).toFixed(8)
+    const e = ((answerE[0] * 0.751 + answerE[1] * 0.686 + answerE[2] * 0.673) / 3)
+    const c = ((answerC[0] * 0.571 + answerC[1] * 0.707 + answerC[2] * 0.674) / 3)
+    const o = ((answerO[0] * 0.619 + answerO[1] * 0.704 + answerO[2] * 0.641) / 3)
+    const n = ((answerN[0] * 0.628 + answerN[1] * 0.708 + answerN[2] * 0.713) / 3)
 
     const emotions_basis = e + ',' + c + ',' + o + ',' + n
-    
+
     let max = Math.max(e, c, o, n)
 
-    let emotions_types, emotions_type, emotions_report = ''
+    let emotions_types, emotions_type, emotions_report
 
     switch (max) {
       case e:

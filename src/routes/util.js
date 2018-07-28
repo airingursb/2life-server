@@ -105,10 +105,10 @@ router.post('/get_nlp_result', (req, res) => {
 
       // e, c, o, n 取值范围是 0~1，需要从算法服务器的接口中获取
       // let { e, c, o, n } = data
-      let e = Math.random()
-      let c = Math.random()
-      let o = Math.random()
-      let n = Math.random()
+      let e = (Math.random()).toFixed(8)
+      let c = (Math.random()).toFixed(8)
+      let o = (Math.random()).toFixed(8)
+      let n = (Math.random()).toFixed(8)
       e = Math.floor((total_e * total_notes + Math.floor(e_basis * e)) / (total_notes + 1))
       c = Math.floor((total_c * total_notes + Math.floor(c_basis * c)) / (total_notes + 1))
       o = Math.floor((total_o * total_notes + Math.floor(o_basis * o)) / (total_notes + 1))

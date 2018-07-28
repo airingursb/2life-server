@@ -2,7 +2,7 @@ import express from 'express'
 import qiniu from 'qiniu'
 import crypto from 'crypto'
 
-import { User, Message } from '../models'
+import { User, Message, Token } from '../models'
 
 import {
   QINIU_ACCESS,
@@ -198,24 +198,42 @@ router.get('/update_emotion_report', (req, res) => {
 })
 
 /* 小程序获取access_token
-* 文档：https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140183
-*/
+ * 文档：https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140183
+ */
 router.get('/access_token', (req, res) => {
   const { uid, timestamp, token } = req.query
   validate(res, true, uid, timestamp, token)
 
   const response = async () => {
-    const options = {
-      uri: 'https://api.weixin.qq.com/cgi-bin/token',
-      qs: {
-        grant_type: 'client_credential',
-        appid: WXP_APPID,
-        secret: WXP_SECRET
-      },
-      json: true
+
+    const access_token = await Token.findOne({
+      where: {
+        deadline: { 'gt': Date.now(), 'lt': Date.now() + 7200000 }
+      }
+    })
+
+    if (!access_token) {
+      const options = {
+        uri: 'https://api.weixin.qq.com/cgi-bin/token',
+        qs: {
+          grant_type: 'client_credential',
+          appid: WXP_APPID,
+          secret: WXP_SECRET
+        },
+        json: true
+      }
+      const data = await rp(options)
+
+      await Token.create({
+        code: data.access_token,
+        deadline: Date.now(),
+        alive: true
+      })
+
+      return res.json({ ...MESSAGE.OK, data: { access_token: data.access_token, timestamp: Date.now() } })
+    } else {
+      return res.json({ ...MESSAGE.OK, data: { access_token, timestamp: Date.now() } })
     }
-    const data = await rp(options)
-    return res.json({ ...MESSAGE.OK, data: { ...data, timestamp: Date.now() } })
   }
   response()
 })
@@ -249,8 +267,6 @@ router.post('/save_logs', (req, res) => {
   const response = async () => {
 
     if (admin === ADMIN_USER && password === ADMIN_PASSWORD) {
-
-
       return res.json(MESSAGE.OK)
     }
   }

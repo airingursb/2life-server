@@ -7,6 +7,7 @@ const Award = db.import('./award')
 const Feedback = db.import('./feedback')
 const Code = db.import('./code')
 const Message = db.import('./message')
+const Token = db.import('./token')
 
 User.hasMany(Note, { foreignKey: 'user_id' })
 User.hasMany(Feedback, { foreignKey: 'user_id' })
@@ -28,5 +29,6 @@ module.exports = {
   Award,
   Feedback,
   Code,
-  Message
+  Message,
+  Token
 }

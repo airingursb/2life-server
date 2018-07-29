@@ -914,7 +914,7 @@ router.get('/check_uid', (req, res) => {
 
 
 /* 通过量表计算用户性格基础
- * content = '2,1,2,1,1,1,2,2,2,1,1,1'
+ * content = '2,1,2,1,1,1,2,2,2,1,1,1,2,2,2,'
  */
 router.post('/calculate_emotion', (req, res) => {
   const { uid, timestamp, token, content } = req.body
@@ -924,20 +924,23 @@ router.post('/calculate_emotion', (req, res) => {
     const answerE = (content.substring(0, 5)).split(',')
     const answerC = (content.substring(6, 11)).split(',')
     const answerO = (content.substring(12, 17)).split(',')
-    const answerN = (content.substring(18, 22)).split(',')
+    const answerA = (content.substring(18, 23)).split(',')
+    const answerN = (content.substring(24, 28)).split(',')
 
     const e = ((answerE[0] * 0.751 + answerE[1] * 0.686 + answerE[2] * 0.673) / 3)
     const c = ((answerC[0] * 0.571 + answerC[1] * 0.707 + answerC[2] * 0.674) / 3)
     const o = ((answerO[0] * 0.619 + answerO[1] * 0.704 + answerO[2] * 0.641) / 3)
+    const a = ((answerA[0] * 0.588 + answerA[1] * 0.602 + answerA[2] * 0.633) / 3)
     const n = ((answerN[0] * 0.628 + answerN[1] * 0.708 + answerN[2] * 0.713) / 3)
 
-    const emotions_basis = e + ',' + c + ',' + o + ',' + n
+    const emotions_basis = e + ',' + c + ',' + o + ',' + a + ',' + n
 
-    let max = Math.max(e, c, o, n)
+    let max = Math.max(e, c, o, a, n)
 
     let emotions_types, emotions_type, emotions_report
 
     switch (max) {
+      case a:
       case e:
         emotions_types = ['恬淡小天使', '温暖小甜心', '元气小青年', '品质小资']
         emotions_report = `你在工作或学习上尽心尽责、勤奋可靠，你认真、合理地安排自己的精力和时间，以便工作时的每一分钟都能够起到最大的作用，从而提高工作的效率和质量，你容易和同事同学建立良好的关系，获得更多的帮助和支持，但有时候过度地要求自己可能会让你陷入病态的完美主义和强迫行为的困境，“要么不做，要做就要做到最好”并不是一句好的座右铭。尝试着告诉自己——我们必须从整体上接纳和遵从我们生命的限制，然后寻找最佳的或是接近最佳的方式来分配我们的时间和精力。（学业）

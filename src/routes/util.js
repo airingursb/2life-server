@@ -100,21 +100,23 @@ router.post('/get_nlp_result', (req, res) => {
     if (user.emotions_type) {
       let emotions_basis = user.emotions_basis.split(',')
       let emotions_array = user.emotions.split(',')
-      let [e_basis, c_basis, o_basis, n_basis] = emotions_basis
-      let [total_e, total_c, total_o, total_n] = emotions_array
+      let [e_basis, c_basis, o_basis, a_basis, n_basis] = emotions_basis
+      let [total_e, total_c, total_o, total_a, total_n] = emotions_array
 
-      // e, c, o, n 取值范围是 0~1，需要从算法服务器的接口中获取
-      // let { e, c, o, n } = data
+      // e, c, o, a, n 取值范围是 0~1，需要从算法服务器的接口中获取
+      // let { e, c, o, a, n } = data
       let e = +((Math.random()).toFixed(8))
       let c = +((Math.random()).toFixed(8))
       let o = +((Math.random()).toFixed(8))
+      let a = +((Math.random()).toFixed(8))
       let n = +((Math.random()).toFixed(8))
       e = Math.floor((total_e * total_notes + (+(e_basis * e).toFixed(8))) / (total_notes + 1))
       c = Math.floor((total_c * total_notes + (+(c_basis * c).toFixed(8))) / (total_notes + 1))
       o = Math.floor((total_o * total_notes + (+(o_basis * o).toFixed(8))) / (total_notes + 1))
+      a = Math.floor((total_a * total_notes + (+(a_basis * a).toFixed(8))) / (total_notes + 1))
       n = Math.floor((total_n * total_notes + (+(n_basis * n).toFixed(8))) / (total_notes + 1))
 
-      let emotions = e + ',' + c + ',' + o + ',' + n
+      let emotions = e + ',' + c + ',' + o + ',' + a + ',' + n
 
       await User.update({
         total_notes: total_notes + 1,
@@ -143,14 +145,19 @@ router.get('/update_emotion_report', (req, res) => {
   const response = async () => {
     let user = await User.findOne({ where: { id: uid } })
 
-    let emotions = user.emotions.split(',')
-    let [e, c, o, n] = emotions
+    if (!user.emotions) {
+      return res.json(MESSAGE.OK(REQUEST_ERROR))
+    }
 
-    let max = Math.max(e, c, o, n)
+    let emotions = user.emotions.split(',')
+    let [e, c, o, a, n] = emotions
+
+    let max = Math.max(e, c, o, a, n)
 
     let emotions_types, emotions_type, emotions_report = ''
 
     switch (max) {
+      case a:
       case e:
         emotions_types = ['恬淡小天使', '温暖小甜心', '元气小青年', '品质小资']
         emotions_report = `你在工作或学习上尽心尽责、勤奋可靠，你认真、合理地安排自己的精力和时间，以便工作时的每一分钟都能够起到最大的作用，从而提高工作的效率和质量，你容易和同事同学建立良好的关系，获得更多的帮助和支持，但有时候过度地要求自己可能会让你陷入病态的完美主义和强迫行为的困境，“要么不做，要做就要做到最好”并不是一句好的座右铭。尝试着告诉自己——我们必须从整体上接纳和遵从我们生命的限制，然后寻找最佳的或是接近最佳的方式来分配我们的时间和精力。（学业）
@@ -226,7 +233,7 @@ router.get('/access_token', (req, res) => {
 
       await Token.create({
         code: data.access_token,
-        deadline: Date.now(),
+        deadline: Date.now() + 7200000,
         alive: true
       })
 

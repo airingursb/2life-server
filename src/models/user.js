@@ -24,8 +24,8 @@ module.exports = (sequelize, DataTypes) => {
     'unread': INTEGER,
     'latitude': DOUBLE,
     'longitude': DOUBLE,
-    'emotions_basis': STRING(80),
-    'emotions': STRING(80),
+    'emotions_basis': STRING(200),
+    'emotions': STRING(200),
     'emotions_type': STRING(45),
     'emotions_report': TEXT,
   })

@@ -53,12 +53,12 @@ router.post('/publish', (req, res) => {
     latitude,
     images)
 
-  const callApi = () => {
+  const callApi = (action) => {
     return new Promise((resolve, reject) => {
       capi.request({
         Region: 'gz',
-        Action: 'TextSentiment',
-        content
+        Action: action,
+        content: title + '。' + content
       }, (err, d) => {
         resolve(d)
         reject(err)
@@ -68,7 +68,13 @@ router.post('/publish', (req, res) => {
 
   const response = async () => {
     const user = await User.findOne({ where: { id: uid } })
-    const data = await callApi()
+    const sens = await callApi('TextSensitivity')
+    const { sensitive } = sens
+    if (sensitive > 0.95) {
+      return res.json(MESSAGE.REQUEST_ERROR)
+    }
+
+    const data = await callApi('TextSentiment')
     const { positive } = data
 
     await Note.create({

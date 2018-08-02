@@ -748,6 +748,10 @@ router.post('/wxp_login', (req, res) => {
     const data = await rp(options)
     const { openid } = data
 
+    if (!openid) {
+      return res.json(MESSAGE.REQUEST_ERROR)
+    }
+
     let user = await User.findOne({ where: { openid }, include: [Badge] })
 
     if (!user) {
@@ -910,7 +914,7 @@ router.get('/check_uid', (req, res) => {
 
 
 /* 通过量表计算用户性格基础
- * content = '2,1,2,1,1,1,2,2,2,1,1,1'
+ * content = '2,1,2,1,1,1,2,2,2,1,1,1,2,2,2,'
  */
 router.post('/calculate_emotion', (req, res) => {
   const { uid, timestamp, token, content } = req.body
@@ -920,20 +924,28 @@ router.post('/calculate_emotion', (req, res) => {
     const answerE = (content.substring(0, 5)).split(',')
     const answerC = (content.substring(6, 11)).split(',')
     const answerO = (content.substring(12, 17)).split(',')
-    const answerN = (content.substring(18, 22)).split(',')
+    const answerA = (content.substring(18, 23)).split(',')
+    const answerN = (content.substring(24, 28)).split(',')
 
-    const e = (answerE[0] * 0.751 + answerE[1] * 0.686 + answerE[2] * 0.673) / 3
-    const c = (answerC[0] * 0.571 + answerC[1] * 0.707 + answerC[2] * 0.674) / 3
-    const o = (answerO[0] * 0.619 + answerO[1] * 0.704 + answerO[2] * 0.641) / 3
-    const n = (answerN[0] * 0.628 + answerN[1] * 0.708 + answerN[2] * 0.713) / 3
+    const e = ((answerE[0] * 0.751 + answerE[1] * 0.686 + answerE[2] * 0.673) / 3)
+    const c = ((answerC[0] * 0.571 + answerC[1] * 0.707 + answerC[2] * 0.674) / 3)
+    const o = ((answerO[0] * 0.619 + answerO[1] * 0.704 + answerO[2] * 0.641) / 3)
+    const a = ((answerA[0] * 0.588 + answerA[1] * 0.602 + answerA[2] * 0.633) / 3)
+    const n = ((answerN[0] * 0.628 + answerN[1] * 0.708 + answerN[2] * 0.713) / 3)
 
-    const emotions_basis = e + ',' + c + ',' + o + ',' + n
-    
-    let max = Math.max(e, c, o, n)
+    const emotions_basis = e + ',' + c + ',' + o + ',' + a + ',' + n
 
-    let emotions_types, emotions_type, emotions_report = ''
+    let max = Math.max(e, c, o, a, n)
+
+    let emotions_types, emotions_type, emotions_report
 
     switch (max) {
+      case a:
+        emotions_types = ['实干主义者', '心灵多面手', '温和思想家', '自我笃行者']
+        emotions_report = `为人谦逊温和，不爱与他人争论。在有意无意中可能会降低自己的原则或者标准，和温柔不同，温和是性格，温柔是态度。你是个温和的人，不爱计较，喜欢忍让，在忍让的过程中，可能会积攒起负能量灾区。一旦导火索被引燃，就容易陷入情绪爆炸。（情绪解读）
+你在学业和事业方面是不温不火的，有自己的节奏，或快或慢，但都在自己的掌控当中，不爱跟他人作比较，觉得自己的事情不需要跟他人进行对比。你有一个属于自己的小宇宙。常常沉浸在自我的小世界中。你擅长进行独自深入地思考，常常会有异于常人的灵感迸发。温和的你可以适当的调整自己的步伐，跟随自己的心。心所向，意所达。（学业事业）
+温和平静的性格可能帮助你在状态上达到平衡，健康的状态能维持很长时间。但在遇到突发事件时，还可以多增进自己的应激能力。同时可以去尝试新的事物，增长自己的见识和开拓眼界。做一个温文尔雅，内涵饱满的儒雅之士。（健康身心）`
+        break
       case e:
         emotions_types = ['恬淡小天使', '温暖小甜心', '元气小青年', '品质小资']
         emotions_report = `你在工作或学习上尽心尽责、勤奋可靠，你认真、合理地安排自己的精力和时间，以便工作时的每一分钟都能够起到最大的作用，从而提高工作的效率和质量，你容易和同事同学建立良好的关系，获得更多的帮助和支持，但有时候过度地要求自己可能会让你陷入病态的完美主义和强迫行为的困境，“要么不做，要做就要做到最好”并不是一句好的座右铭。尝试着告诉自己——我们必须从整体上接纳和遵从我们生命的限制，然后寻找最佳的或是接近最佳的方式来分配我们的时间和精力。（学业）
@@ -942,9 +954,9 @@ router.post('/calculate_emotion', (req, res) => {
         break
       case c:
         emotions_types = ['躁动小魔王', '科学小怪人', '极致主义者', '暴躁领袖']
-        emotions_report = `对生活抱有极大热忱的你，有时候难免会过度关注生活中负面的信息，尤其是与自身相关的方面，所以总是在一个又一个难以入眠的夜晚细细数着白天是否完成自己的计划、离自己的目标有没有更进一步……总是觉得自己没有达到理想中的自己。但正是反复的思考和担忧让你对目标和方向更加清晰明确，也提前对即将到来的困难做好准备。对风险和困难的敏感是你永不停歇的奋斗源泉。(学业)
-尽管容易受到负面信息的影响，造成情绪波动，从而进行间歇性的暴饮暴食和抽烟喝酒，若是长时间陷入焦虑但是通常你对自己的健康状况非常警觉，身体上一点小小的问题也会让你警惕起来，去医院寻求治疗，所以重症疾病很容易被你扼杀在萌芽里。天性外向开朗的你更容易在遇到困境或是心情低落时寻求朋友的帮助。(健康)
-虽然有时候神经敏感会让你过度解读伴侣的一言一行，例如TA的面无表情会让你认为是一种冷漠无奈的抵抗。但是你会更加容易和伴侣建立起沟通机制。在沟通这件事上，我们总是误以为自己的非言语线索足够让对方明白我们想表达的意思，但其实，不论在一起多久、多么有默契的伴侣也通常难以做到这一点，这时候需要我们冷静下来，把思绪仔细地告诉对方。(爱情)`
+        emotions_report = `对生活抱有极大热忱的你，有时候难免会过度关注生活中负面的信息，尤其是与自身相关的方面，所以总是在一个又一个难以入眠的夜晚细细数着白天是否完成自己的计划、离自己的目标有没有更进一步……总是觉得自己没有达到理想中的自己。但正是反复的思考和担忧让你对目标和方向更加清晰明确，也提前对即将到来的困难做好准备。对风险和困难的敏感是你永不停歇的奋斗源泉。（学业）
+尽管容易受到负面信息的影响，造成情绪波动，从而进行间歇性的暴饮暴食和抽烟喝酒，若是长时间陷入焦虑但是通常你对自己的健康状况非常警觉，身体上一点小小的问题也会让你警惕起来，去医院寻求治疗，所以重症疾病很容易被你扼杀在萌芽里。天性外向开朗的你更容易在遇到困境或是心情低落时寻求朋友的帮助。（健康）
+虽然有时候神经敏感会让你过度解读伴侣的一言一行，例如TA的面无表情会让你认为是一种冷漠无奈的抵抗。但是你会更加容易和伴侣建立起沟通机制。在沟通这件事上，我们总是误以为自己的非言语线索足够让对方明白我们想表达的意思，但其实，不论在一起多久、多么有默契的伴侣也通常难以做到这一点，这时候需要我们冷静下来，把思绪仔细地告诉对方。（爱情）`
         break
       case o:
         emotions_types = ['厌世大魔王', '灵性创作家', '小世界掌控家', '灵魂多面手']

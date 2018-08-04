@@ -93,13 +93,13 @@ router.post('/publish', (req, res) => {
       status: req.body.status || user.status
     })
 
-    let total_notes = user.total_notes
-    let total_modes = user.mode * total_notes
-
-    await User.update({
-      total_notes: total_notes + 1,
-      mode: Math.floor((total_modes + Math.floor(positive * 100)) / (total_notes + 1))
-    }, { where: { id: uid } })
+    // let total_notes = user.total_notes
+    // let total_modes = user.mode * total_notes
+    //
+    // await User.update({
+    //   total_notes: total_notes + 1,
+    //   mode: Math.floor((total_modes + Math.floor(positive * 100)) / (total_notes + 1))
+    // }, { where: { id: uid } })
 
     return res.json(MESSAGE.OK)
   }

@@ -132,11 +132,11 @@ router.post('/get_nlp_result', (req, res) => {
         }
       }
 
-      e = Math.floor((total_e * total_notes + (+(e_basis * e).toFixed(8))) / (total_notes + 1))
-      c = Math.floor((total_c * total_notes + (+(c_basis * c).toFixed(8))) / (total_notes + 1))
-      o = Math.floor((total_o * total_notes + (+(o_basis * o).toFixed(8))) / (total_notes + 1))
-      a = Math.floor((total_a * total_notes + (+(a_basis * a).toFixed(8))) / (total_notes + 1))
-      n = Math.floor((total_n * total_notes + (+(n_basis * n).toFixed(8))) / (total_notes + 1))
+      e = (total_e * total_notes + e_basis * e) / (total_notes + 1)
+      c = (total_c * total_notes + c_basis * c) / (total_notes + 1)
+      o = (total_o * total_notes + o_basis * o) / (total_notes + 1)
+      a = (total_a * total_notes + a_basis * a) / (total_notes + 1)
+      n = (total_n * total_notes + n_basis * n) / (total_notes + 1)
 
       let emotions = e + ',' + c + ',' + o + ',' + a + ',' + n
 
@@ -146,6 +146,7 @@ router.post('/get_nlp_result', (req, res) => {
         emotions
       }, { where: { id: uid } })
     } else {
+
       await User.update({
         total_notes: total_notes + 1,
         mode: Math.floor((total_modes + Math.floor(positive * 100)) / (total_notes + 1))
@@ -309,6 +310,14 @@ router.post('/save_logs', (req, res) => {
     }
   }
 
+  response()
+})
+
+/* 图片安全接口回调 */
+router.get('/ban_img', (req, res) => {
+  const response = async () => {
+    return res.json(MESSAGE.OK)
+  }
   response()
 })
 

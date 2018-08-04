@@ -53,12 +53,14 @@ router.post('/publish', (req, res) => {
     latitude,
     images)
 
-  const callApi = (action) => {
+  // 文档：https://cloud.tencent.com/document/product/271/2072
+  const callApi = (action, type) => {
     return new Promise((resolve, reject) => {
       capi.request({
         Region: 'gz',
         Action: action,
-        content: title + '。' + content
+        content: title + '。' + content,
+        type
       }, (err, d) => {
         resolve(d)
         reject(err)
@@ -68,13 +70,13 @@ router.post('/publish', (req, res) => {
 
   const response = async () => {
     const user = await User.findOne({ where: { id: uid } })
-    const sens = await callApi('TextSensitivity')
+    const sens = await callApi('TextSensitivity', 2)
     const { sensitive } = sens
     if (sensitive > 0.70) {
       return res.json(MESSAGE.REQUEST_ERROR)
     }
 
-    const data = await callApi('TextSentiment')
+    const data = await callApi('TextSentiment', 4)
     const { positive } = data
 
     await Note.create({

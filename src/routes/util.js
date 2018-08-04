@@ -105,11 +105,33 @@ router.post('/get_nlp_result', (req, res) => {
 
       // e, c, o, a, n 取值范围是 0~1，需要从算法服务器的接口中获取
       // let { e, c, o, a, n } = data
+      // 目前仅内部灰度测试，不对外使用
       let e = +((Math.random()).toFixed(8))
       let c = +((Math.random()).toFixed(8))
       let o = +((Math.random()).toFixed(8))
       let a = +((Math.random()).toFixed(8))
       let n = +((Math.random()).toFixed(8))
+
+      if (uid === 1 || uid === 2 || uid === 3) {
+        const options = {
+          method: 'POST',
+          uri: 'http://118.24.154.90/ner',
+          body: {
+            content,
+            key: NLP_ID
+          },
+          json: true
+        }
+        let mode = await rp(options)
+        if (mode.code === 0) {
+          e = mode.data.mood_sub_type.E
+          c = mode.data.mood_sub_type.C
+          a = mode.data.mood_sub_type.A
+          n = mode.data.mood_sub_type.N
+          o = mode.data.mood_sub_type.O
+        }
+      }
+
       e = Math.floor((total_e * total_notes + (+(e_basis * e).toFixed(8))) / (total_notes + 1))
       c = Math.floor((total_c * total_notes + (+(c_basis * c).toFixed(8))) / (total_notes + 1))
       o = Math.floor((total_o * total_notes + (+(o_basis * o).toFixed(8))) / (total_notes + 1))
@@ -242,7 +264,7 @@ router.get('/access_token', (req, res) => {
 
       await Token.create({
         code: data.access_token,
-        deadline: Date.now() + 7200000,
+        deadline: Date.now() + 7000000, // 官方7200秒，这里预留时间防止前端重复请求
         alive: true
       })
 

@@ -70,7 +70,7 @@ router.post('/publish', (req, res) => {
     const user = await User.findOne({ where: { id: uid } })
     const sens = await callApi('TextSensitivity')
     const { sensitive } = sens
-    if (sensitive > 0.95) {
+    if (sensitive > 0.70) {
       return res.json(MESSAGE.REQUEST_ERROR)
     }
 

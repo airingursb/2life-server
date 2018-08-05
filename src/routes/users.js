@@ -421,7 +421,7 @@ router.get('/connect_by_random', (req, res) => {
 
     if (user.last_times < 1) {
       // await User.update({ status: 501, user_other_id: partner.id, connect_at: Date.now() }, { where: { id: uid } })
-      return res.json(MESSAGE.CONNECT_ERROR_NO_NOTE)
+      return res.json(MESSAGE.CONNECT_ERROR_NO_TIME)
     } else {
       await User.update({ status: 1000, user_other_id: partner.id, connect_at: Date.now() }, { where: { id: uid } })
     }

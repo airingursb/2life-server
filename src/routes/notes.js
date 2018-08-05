@@ -309,4 +309,23 @@ router.post('/update', (req, res) => {
   response()
 })
 
+/* notes/refresh_total_notes */
+router.get('/refresh_total_notes', (req, res) => {
+
+  const { uid, timestamp, token } = req.query
+  validate(res, true, uid, timestamp, token)
+
+  const response = async () => {
+    const c = await Note.count({ where: { user_id: id } })
+
+    await User.update({
+      total_notes: c
+    }, { where: { id: uid } })
+
+    return res.json(MESSAGE.OK)
+  }
+
+  response()
+})
+
 module.exports = router

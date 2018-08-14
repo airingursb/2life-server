@@ -8,6 +8,7 @@ const Feedback = db.import('./feedback')
 const Code = db.import('./code')
 const Message = db.import('./message')
 const Token = db.import('./token')
+const Activity = db.import('./activity')
 
 User.hasMany(Note, { foreignKey: 'user_id' })
 User.hasMany(Feedback, { foreignKey: 'user_id' })
@@ -30,5 +31,6 @@ module.exports = {
   Feedback,
   Code,
   Message,
-  Token
+  Token,
+  Activity
 }

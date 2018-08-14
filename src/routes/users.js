@@ -1,6 +1,6 @@
 import express from 'express'
 
-import { User, Code, Message, Note, Badge, Feedback } from '../models'
+import { User, Code, Message, Note, Badge, Feedback, Activity } from '../models'
 
 import md5 from 'md5'
 
@@ -996,6 +996,151 @@ router.post('/calculate_emotion', (req, res) => {
       ...MESSAGE.OK,
       data: { emotions_basis, emotions: emotions_basis, emotions_type, emotions_report, emotions_url }
     })
+  }
+
+  response()
+})
+
+/* /users/update_vip */
+router.get('/update_vip', (req, res) => {
+
+  const { uid, timestamp, token, expires } = req.query
+  validate(res, true, uid, timestamp, token, expires)
+
+  const response = async () => {
+    await User.update({
+      vip: 1,
+      vip_expires: expires
+    }, { where: { id: uid } })
+
+    return res.json(MESSAGE.OK)
+  }
+
+  response()
+})
+
+/* /users/enroll_activity */
+router.get('/enroll_activity', (req, res) => {
+
+  const { uid, timestamp, token, type, code } = req.query
+  validate(res, true, uid, timestamp, token, type)
+
+  const response = async () => {
+    if ((new Date(2018, 8, 17).getTime() > Date.now()) || (Date.now() > new Date(2018, 8, 24).getTime()))
+      return res.json(MESSAGE.REQUEST_ERROR)
+
+    const user = await User.findOne({ where: { id: uid } })
+    const act = {
+      'process': 0,
+      'gold': 7,
+      'finished': 0,
+      'beginline': new Date(2018, 8, 17).getTime(),
+      'deadline': new Date(2018, 8, 24).getTime(),
+    }
+
+    // type: 0 未匹配用户随机匹配, 1 已匹配用户直接报名, 2 邀请匹配
+    if (type === 0) {
+      if (user.user_other_id !== -1)
+        return res.json(MESSAGE.CONNECT_ERROR_ALREADY)
+
+      await Activity.create(Object.assign(act, {
+        'user_id': uid,
+        'user_other_id': -1,
+        'state': user.status,
+        'success': 0,
+      }))
+    }
+
+    if (type === 1) {
+      await Activity.create(Object.assign(act, {
+        'user_id': uid,
+        'user_other_id': user.user_other_id,
+        'state': user.status,
+        'success': 1,
+      }))
+
+      await Activity.create(Object.assign(act, {
+        'user_id': user.user_other_id,
+        'user_other_id': uid,
+        'state': user.status,
+        'success': 1,
+      }))
+      JiGuangPush(user.user_other_id, `${user.name}已经为您报名了七夕节活动！一起完成活动可以年费会员奖励哦！`)
+    }
+
+    if (type === 2) {
+      if (!code)
+        return res.json(MESSAGE.PARAMETER_ERROR)
+
+      const user_other = await User.findOne({ where: { code } })
+
+      if (!user_other)
+        return res.json(MESSAGE.USER_NOT_EXIST)
+
+      if (user_other.user_other_id !== -1 || user.user_other_id !== -1)
+        return res.json(MESSAGE.CONNECT_ERROR_ALREADY)
+
+      await Activity.create(Object.assign(act, {
+        'user_id': uid,
+        'user_other_id': user_other.id,
+        'state': user.status,
+        'success': 1,
+      }))
+
+      await Activity.create(Object.assign(act, {
+        'user_id': user_other.id,
+        'user_other_id': uid,
+        'state': user_other.status,
+        'success': 1,
+      }))
+      JiGuangPush(user_other.id, `${user.name}已经为您报名了七夕节活动！一起完成活动可以获得大奖哦！`)
+    }
+
+    return res.json(MESSAGE.OK)
+  }
+
+  response()
+})
+
+/* /users/update_activity */
+router.get('/update_activity', (req, res) => {
+
+  const { uid, timestamp, token } = req.query
+  validate(res, true, uid, timestamp, token)
+
+  const response = async () => {
+    if ((new Date(2018, 8, 17).getTime() > Date.now()) || (Date.now() > new Date(2018, 8, 24).getTime()))
+      return res.json(MESSAGE.REQUEST_ERROR)
+
+    const act = await Activity.findOne({ where: { user_id: uid } })
+
+    if (!act)
+      return res.json(MESSAGE.REQUEST_ERROR)
+
+    const user = await User.findOne({ where: { id: uid } })
+
+    // 中途解除匹配
+    if (user.user_other_id !== act.user_other_id) {
+      await Activity.update({ 'finished': -1 })
+      return res.json(MESSAGE.REQUEST_ERROR)
+    }
+
+    // 没有连续写日记
+    if ((new Date().getDate() - 17) > act.process) {
+      await Activity.update({ 'finished': -2 })
+      return res.json(MESSAGE.REQUEST_ERROR)
+    }
+
+    if ((act.process + 1) === act.gold) {
+      await Activity.update({
+        'process': act.process + 1,
+        'finished': 1
+      })
+    } else {
+      await Activity.update({ 'process': new Date().getDate() - 16})
+    }
+
+    return res.json(MESSAGE.OK)
   }
 
   response()

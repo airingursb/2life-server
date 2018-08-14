@@ -28,5 +28,7 @@ module.exports = (sequelize, DataTypes) => {
     'emotions': STRING(200),
     'emotions_type': STRING(45),
     'emotions_report': TEXT,
+    'vip': INTEGER,
+    'vip_expires': DOUBLE
   })
 }

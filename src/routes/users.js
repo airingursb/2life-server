@@ -1026,7 +1026,10 @@ router.get('/enroll_activity', (req, res) => {
   validate(res, true, uid, timestamp, token, type)
 
   const response = async () => {
-    if ((new Date(2018, 8, 17).getTime() > Date.now()) || (Date.now() > new Date(2018, 8, 24).getTime()))
+    if ((new Date('2018-08-17').getTime() > Date.now()) || (Date.now() > new Date('2018-08-24').getTime()))
+      return res.json(MESSAGE.REQUEST_ERROR)
+
+    if (await Activity.findOne({ where: { user_id: uid } }))
       return res.json(MESSAGE.REQUEST_ERROR)
 
     const user = await User.findOne({ where: { id: uid } })
@@ -1034,12 +1037,12 @@ router.get('/enroll_activity', (req, res) => {
       'process': 0,
       'gold': 7,
       'finished': 0,
-      'beginline': new Date(2018, 8, 17).getTime(),
-      'deadline': new Date(2018, 8, 24).getTime(),
+      'beginline': new Date('2018-08-17').getTime(),
+      'deadline': new Date('2018-08-24').getTime(),
     }
 
     // type: 0 未匹配用户随机匹配, 1 已匹配用户直接报名, 2 邀请匹配
-    if (type === 0) {
+    if (parseInt(type) === 0) {
       if (user.user_other_id !== -1)
         return res.json(MESSAGE.CONNECT_ERROR_ALREADY)
 
@@ -1051,7 +1054,10 @@ router.get('/enroll_activity', (req, res) => {
       }))
     }
 
-    if (type === 1) {
+    if (parseInt(type) === 1) {
+      if (user.user_other_id === -1)
+        return res.json(MESSAGE.REQUEST_ERROR)
+
       await Activity.create(Object.assign(act, {
         'user_id': uid,
         'user_other_id': user.user_other_id,
@@ -1066,9 +1072,17 @@ router.get('/enroll_activity', (req, res) => {
         'success': 1,
       }))
       JiGuangPush(user.user_other_id, `${user.name}已经为您报名了七夕节活动！一起完成活动可以年费会员奖励哦！`)
+
+      let partner = await User.findOne({ where: { id: user.user_other_id } })
+
+      return res.json({
+        user: { ...user.dataValues, password: 0 },
+        partner: { ...partner.dataValues, password: 0 },
+        ...MESSAGE.OK
+      })
     }
 
-    if (type === 2) {
+    if (parseInt(type) === 2) {
       if (!code)
         return res.json(MESSAGE.PARAMETER_ERROR)
 
@@ -1094,6 +1108,14 @@ router.get('/enroll_activity', (req, res) => {
         'success': 1,
       }))
       JiGuangPush(user_other.id, `${user.name}已经为您报名了七夕节活动！一起完成活动可以获得大奖哦！`)
+
+      let partner = await User.findOne({ where: { id: user_other.id } })
+
+      return res.json({
+        user: { ...user.dataValues, password: 0 },
+        partner: { ...partner.dataValues, password: 0 },
+        ...MESSAGE.OK
+      })
     }
 
     return res.json(MESSAGE.OK)
@@ -1109,7 +1131,7 @@ router.get('/update_activity', (req, res) => {
   validate(res, true, uid, timestamp, token)
 
   const response = async () => {
-    if ((new Date(2018, 8, 17).getTime() > Date.now()) || (Date.now() > new Date(2018, 8, 24).getTime()))
+    if ((new Date('2018-08-17').getTime() > Date.now()) || (Date.now() > new Date('2018-08-24').getTime()))
       return res.json(MESSAGE.REQUEST_ERROR)
 
     const act = await Activity.findOne({ where: { user_id: uid } })
@@ -1119,15 +1141,15 @@ router.get('/update_activity', (req, res) => {
 
     const user = await User.findOne({ where: { id: uid } })
 
-    // 中途解除匹配
-    if (user.user_other_id !== act.user_other_id) {
-      await Activity.update({ 'finished': -1 })
+    // 中途解除匹配, 一天时间给后台修改user.user_other_id
+    if ((user.user_other_id !== act.user_other_id) && (new Date('2018-08-18').getTime() < Date.now())) {
+      await Activity.update({ 'finished': -1 }, { where: { user_id: uid } })
       return res.json(MESSAGE.REQUEST_ERROR)
     }
 
     // 没有连续写日记
     if ((new Date().getDate() - 17) > act.process) {
-      await Activity.update({ 'finished': -2 })
+      await Activity.update({ 'finished': -2 }, { where: { user_id: uid } })
       return res.json(MESSAGE.REQUEST_ERROR)
     }
 
@@ -1135,12 +1157,45 @@ router.get('/update_activity', (req, res) => {
       await Activity.update({
         'process': act.process + 1,
         'finished': 1
-      })
+      }, { where: { user_id: uid } })
     } else {
-      await Activity.update({ 'process': new Date().getDate() - 16})
+      await Activity.update({ 'process': new Date().getDate() - 16}, { where: { user_id: uid } })
     }
 
     return res.json(MESSAGE.OK)
+  }
+
+  response()
+})
+
+/* /users/get_activity */
+router.get('/get_activity', (req, res) => {
+
+  const { uid, timestamp, token } = req.query
+  validate(res, true, uid, timestamp, token)
+
+  const response = async () => {
+    if ((new Date('2018-08-17').getTime() > Date.now()) || (Date.now() > new Date('2018-08-24').getTime()))
+      return res.json(MESSAGE.REQUEST_ERROR)
+
+    const act = await Activity.findOne({ where: { user_id: uid } })
+
+    if (!act)
+      return res.json(MESSAGE.REQUEST_ERROR)
+
+    let partner = {}
+    if (act.user_other_id) {
+      partner = await User.findOne({ where: { id: act.user_other_id } })
+    }
+    
+    const user = await User.findOne({ where: { id: uid } })
+
+    return res.json({
+      user: { ...user.dataValues, password: 0 },
+      partner: { ...partner.dataValues, password: 0 },
+      act,
+      ...MESSAGE.OK
+    })
   }
 
   response()

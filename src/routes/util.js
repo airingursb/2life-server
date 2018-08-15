@@ -250,7 +250,7 @@ router.get('/show_act', (req, res) => {
   validate(res, true, uid, timestamp, token)
 
   // url: 活动主页, shareUrl: 分享页面
-  return res.json({ ...MESSAGE.OK, show: true, url: 'https://2life.act.ursb.me/#/', shareUrl: '' })
+  return res.json({ ...MESSAGE.OK, show: true, url: 'https://2life.act.ursb.me/#/', shareUrl: 'https://2life.act.ursb.me/#/invitation' })
 })
 
 /* 小程序获取access_token

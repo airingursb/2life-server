@@ -316,7 +316,7 @@ router.get('/refresh_total_notes', (req, res) => {
   validate(res, true, uid, timestamp, token)
 
   const response = async () => {
-    const c = await Note.count({ where: { user_id: id } })
+    const c = await Note.count({ where: { user_id: uid } })
 
     await User.update({
       total_notes: c

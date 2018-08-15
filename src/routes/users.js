@@ -1026,19 +1026,19 @@ router.get('/enroll_activity', (req, res) => {
   validate(res, true, uid, timestamp, token, type)
 
   const response = async () => {
-    if ((new Date('2018-08-17').getTime() > Date.now()) || (Date.now() > new Date('2018-08-24').getTime()))
+    if (Date.now() > new Date('2018-08-18 0:0:0').getTime())
       return res.json(MESSAGE.REQUEST_ERROR)
 
     if (await Activity.findOne({ where: { user_id: uid } }))
-      return res.json(MESSAGE.REQUEST_ERROR)
+      return res.json({ code: 666, message: '用户已报名' })
 
     const user = await User.findOne({ where: { id: uid } })
     const act = {
       'process': 0,
       'gold': 7,
       'finished': 0,
-      'beginline': new Date('2018-08-17').getTime(),
-      'deadline': new Date('2018-08-24').getTime(),
+      'beginline': new Date('2018-08-17 0:0:0').getTime(),
+      'deadline': new Date('2018-08-24 0:0:0').getTime(),
     }
 
     // type: 0 未匹配用户随机匹配, 1 已匹配用户直接报名, 2 邀请匹配
@@ -1131,7 +1131,7 @@ router.get('/update_activity', (req, res) => {
   validate(res, true, uid, timestamp, token)
 
   const response = async () => {
-    if ((new Date('2018-08-17').getTime() > Date.now()) || (Date.now() > new Date('2018-08-24').getTime()))
+    if ((new Date('2018-08-17 0:0:0').getTime() > Date.now()) || (Date.now() > new Date('2018-08-24 0:0:0').getTime()))
       return res.json(MESSAGE.REQUEST_ERROR)
 
     const act = await Activity.findOne({ where: { user_id: uid } })
@@ -1175,7 +1175,7 @@ router.get('/get_activity', (req, res) => {
   validate(res, true, uid, timestamp, token)
 
   const response = async () => {
-    if ((new Date('2018-08-17').getTime() > Date.now()) || (Date.now() > new Date('2018-08-24').getTime()))
+    if ((new Date('2018-08-14').getTime() > Date.now()) || (Date.now() > new Date('2018-08-24').getTime()))
       return res.json(MESSAGE.REQUEST_ERROR)
 
     const act = await Activity.findOne({ where: { user_id: uid } })
@@ -1183,8 +1183,8 @@ router.get('/get_activity', (req, res) => {
     if (!act)
       return res.json(MESSAGE.REQUEST_ERROR)
 
-    let partner = {}
-    if (act.user_other_id) {
+    let partner = { dataValues: {} }
+    if (act.user_other_id !== -1) {
       partner = await User.findOne({ where: { id: act.user_other_id } })
     }
     

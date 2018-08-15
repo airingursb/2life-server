@@ -244,6 +244,15 @@ router.get('/update_emotion_report', (req, res) => {
   response()
 })
 
+router.get('/show_act', (req, res) => {
+
+  const { uid, timestamp, token } = req.query
+  validate(res, true, uid, timestamp, token)
+
+  // url: 活动主页, shareUrl: 分享页面
+  return res.json({ ...MESSAGE.OK, show: true, url: 'https://2life.act.ursb.me/#/', shareUrl: '' })
+})
+
 /* 小程序获取access_token
  * 文档：https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140183
  */

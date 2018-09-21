@@ -7,6 +7,7 @@ import users from './routes/users'
 import notes from './routes/notes'
 import modes from './routes/modes'
 import util from './routes/util'
+import admin from './routes/admin'
 
 import log4js from 'log4js'
 
@@ -43,6 +44,7 @@ app.use('/users', users)
 app.use('/notes', notes)
 app.use('/modes', modes)
 app.use('/utils', util)
+app.use('/admin', admin)
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {

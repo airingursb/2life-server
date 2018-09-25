@@ -8,7 +8,7 @@ import {
   JiGuangPush,
 } from '../config'
 
-import { User } from '../models'
+import { User, Message } from '../models'
 
 const router = express.Router()
 

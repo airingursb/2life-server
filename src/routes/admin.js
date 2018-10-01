@@ -106,7 +106,7 @@ router.post('/user/vip_expires', (req, res) => {
       return res.jsonp(MESSAGE.PASSWORD_ERROR)
     }
 
-    await User.update({ vip_expires, vip }, { id: uid })
+    await User.update({ vip_expires, vip }, { where: { id: uid } })
 
     return res.jsonp(MESSAGE.OK)
   }
@@ -127,7 +127,7 @@ router.get('/user/reset_last_times', (req, res) => {
       return res.jsonp(MESSAGE.PASSWORD_ERROR)
     }
 
-    await User.update({ last_times: 3 }, { where: { last_times: { gt: 3 } } })
+    await User.update({ last_times: 3 }, { where: { last_times: { lt: 3 } } })
 
     return res.jsonp(MESSAGE.OK)
   }

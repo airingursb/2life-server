@@ -127,7 +127,7 @@ router.get('/user/reset_last_times', (req, res) => {
       return res.jsonp(MESSAGE.PASSWORD_ERROR)
     }
 
-    await User.update({ last_times: 3 }, { last_times: { gt: 3 } })
+    await User.update({ last_times: 3 }, { where: { last_times: { gt: 3 } } })
 
     return res.jsonp(MESSAGE.OK)
   }

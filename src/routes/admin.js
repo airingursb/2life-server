@@ -114,5 +114,25 @@ router.post('/user/vip_expires', (req, res) => {
   response()
 })
 
+// 每月重置匹配次数接口
+router.get('/user/reset_last_times', (req, res) => {
+
+  const { account, password } = req.query
+
+  validate(res, false, account, password)
+
+
+  const response = async () => {
+    if (account !== ADMIN_USER || password !== ADMIN_PASSWORD) {
+      return res.jsonp(MESSAGE.PASSWORD_ERROR)
+    }
+
+    await User.update({ last_times: 3 }, { last_times: { gt: 3 } })
+
+    return res.jsonp(MESSAGE.OK)
+  }
+
+  response()
+})
 
 module.exports = router

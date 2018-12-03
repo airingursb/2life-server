@@ -1134,7 +1134,7 @@ router.get('/enroll_activity', (req, res) => {
       // 为2人进行匹配
       await User.update({ status: 1000, user_other_id: user_other.id, connect_at: Date.now() }, { where: { id: uid } })
       await User.update({ status: 1000, user_other_id: uid, connect_at: Date.now() }, { where: { id: user_other.id } })
-  
+
       // 通知对方被匹配
       JiGuangPush(uid, `你和${user_other.name}的配对成功了！努力完成活动赢取奖励吧！`)
       JiGuangPush(user_other.id, `你和${user.name}配对成功了！努力完成活动赢取奖励吧！`)
@@ -1228,7 +1228,7 @@ router.get('/update_activity', (req, res) => {
         'finished': 1
       }, { where: { user_id: uid } })
     } else {
-      await Activity.update({ 'process': new Date().getDate() - 19}, { where: { user_id: uid } })
+      await Activity.update({ 'process': new Date().getDate() - 19 }, { where: { user_id: uid } })
     }
 
     return res.json(MESSAGE.OK)
@@ -1256,7 +1256,7 @@ router.get('/get_activity', (req, res) => {
     if (act.user_other_id !== -1) {
       partner = await User.findOne({ where: { id: act.user_other_id } })
     }
-    
+
     const user = await User.findOne({ where: { id: uid } })
 
     return res.json({
@@ -1265,6 +1265,33 @@ router.get('/get_activity', (req, res) => {
       act,
       ...MESSAGE.OK
     })
+  }
+
+  response()
+})
+
+router.post('/reset_password', (req, res) => {
+
+  const { account, password, code, timestamp } = req.body
+
+  validate(res, false, account, password, code, timestamp)
+
+  const findCode = async () => {
+    return await Code.findOne({ where: { code, timestamp } })
+  }
+
+  const response = async () => {
+    const code = await findCode()
+    if (code) {
+      const user = await User.findOne({ where: { account } })
+      if (!user) {
+        return res.json(MESSAGE.USER_NOT_EXIST)
+      } else {
+        await User.update({ password: md5Pwd(password) }, { where: { account } })
+        return res.json(MESSAGE.OK)
+      }
+    }
+    return res.json(MESSAGE.CODE_ERROR)
   }
 
   response()

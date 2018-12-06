@@ -1,4 +1,5 @@
 import express from 'express'
+import rateLimit from 'express-rate-limit'
 
 import { User, Code, Message, Note, Badge, Feedback, Activity } from '../models'
 
@@ -25,8 +26,16 @@ import {
 
 const router = express.Router()
 
+app.enable('trust proxy')
+
+const createAccountLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000 * 24 * 7,
+  max: 3,
+  message: 'Too many accounts created from this IP! Please be nice!'
+})
+
 /* users/code */
-router.post('/code', (req, res) => {
+router.post('/code', createAccountLimiter, (req, res) => {
 
   const { account } = req.body
   validate(res, false, account)

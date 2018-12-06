@@ -15,6 +15,7 @@
     "body-parser": "~1.16.0",
     "crypto-js": "^3.1.9-1",
     "express": "~4.14.1",
+    "express-rate-limit": "^3.3.2",
     "jpush-async": "^4.0.0-rc.1",
     "log4js": "^2.7.0",
     "md5": "^2.2.1",

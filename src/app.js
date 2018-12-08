@@ -10,8 +10,17 @@ import util from './routes/util'
 import admin from './routes/admin'
 
 import log4js from 'log4js'
+import rateLimit from 'express-rate-limit'
 
 const app = express()
+
+app.enable('trust proxy')
+
+const createAccountLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000 * 24 * 7,
+  max: 3,
+  message: 'Too many accounts created from this IP! Please be nice!'
+})
 
 log4js.configure({
   appenders: {
@@ -45,6 +54,8 @@ app.use('/notes', notes)
 app.use('/modes', modes)
 app.use('/utils', util)
 app.use('/admin', admin)
+
+app.use('/users/code', createAccountLimiter)
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {

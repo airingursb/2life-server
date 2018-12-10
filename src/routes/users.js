@@ -1287,7 +1287,7 @@ router.post('/reset_password', (req, res) => {
       if (!user) {
         return res.json(MESSAGE.USER_NOT_EXIST)
       } else {
-        await User.update({ password: md5Pwd(password) }, { where: { account } })
+        await User.update({ password: md5(password) }, { where: { account } })
         return res.json(MESSAGE.OK)
       }
     }

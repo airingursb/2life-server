@@ -112,7 +112,7 @@ router.post('/get_nlp_result', (req, res) => {
       let a = +((Math.random()).toFixed(8))
       let n = +((Math.random()).toFixed(8))
 
-      if (uid === 1 || uid === 2 || uid === 3) {
+      if (uid === 2 || uid === 3) {
         const options = {
           method: 'POST',
           uri: 'http://118.24.154.90/ner',
@@ -331,11 +331,23 @@ router.post('/save_logs', (req, res) => {
 })
 
 /* 图片安全接口回调 */
-router.get('/ban_img', (req, res) => {
+router.get('/ban_img', (_, res) => {
   const response = async () => {
     return res.json(MESSAGE.OK)
   }
   response()
+})
+
+/* 判断机型与重定向到商店 */
+router.get('/store', (req, res) => {
+  let ua = req.headers['user-agent']
+
+  if (/Android/.test(ua)) {
+    res.location('https://www.pgyer.com/2life')
+  } else {
+    res.location('https://itunes.apple.com/cn/app/%E5%8F%8C%E7%94%9F%E6%97%A5%E8%AE%B0-%E4%BD%A0%E6%98%AF%E6%88%91%E6%97%A5%E8%AE%B0%E9%87%8C%E5%86%99%E4%B8%8B%E7%9A%84%E4%B8%83%E5%A4%95/id1245100877?mt=8')
+  }
+  res.send(302)
 })
 
 module.exports = router

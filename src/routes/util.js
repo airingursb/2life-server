@@ -453,8 +453,8 @@ router.get('/version', (req, res) => {
       if (/Android/.test(ua)) {
         data = await Version.findAll({
           where: {
-            platform: '2',
-            status: '1'
+            platform: 2,
+            status: 1
           }
         })
       }
@@ -462,16 +462,16 @@ router.get('/version', (req, res) => {
       if (/like Mac OS X/.test(ua)) {
         data = await Version.findAll({
           where: {
-            platform: '1',
-            status: '1'
+            platform: 1,
+            status: 1
           }
         })
       }
     } else {
       data = await Version.findAll({
         where: {
-          platform: '3',
-          status: '1'
+          platform: 3,
+          status: 1
         }
       })
     }
@@ -493,33 +493,52 @@ router.get('/check_version', (req, res) => {
   let ua = req.headers['user-agent']
   const response = async () => {
     let data
+    let results
     if (is_wxapp === 0) {
       if (/Android/.test(ua)) {
         data = await Version.findOne({
           where: {
             version,
-            platform: '2',
+            platform: 2,
           }
         })
+        results = await Version.findOne({
+          where: {
+            status: 1,
+            platform: 2,
+          }
+        }) 
       }
 
       if (/like Mac OS X/.test(ua)) {
         data = await Version.findOne({
           where: {
-            platform: '1',
+            platform: 1,
             version
           }
         })
+        results = await Version.findOne({
+          where: {
+            status: 1,
+            platform: 1,
+          }
+        }) 
       }
     } else {
       data = await Version.findOne({
         where: {
-          platform: '3',
+          platform: 3,
           version
         }
       })
+      results = await Version.findOne({
+        where: {
+          status: 1,
+          platform: 3,
+        }
+      }) 
     }
-    return res.json({...MESSAGE.OK, data})
+    return res.json({...MESSAGE.OK, data, newest: results[0]})
   }
 
   response()

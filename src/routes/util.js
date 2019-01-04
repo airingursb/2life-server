@@ -486,63 +486,27 @@ router.get('/version', (req, res) => {
 router.get('/check_version', (req, res) => {
 
   const {
-    is_wxapp,
-    version
+    version,
+    platform
   } = req.query
 
-  let ua = req.headers['user-agent']
   const response = async () => {
-    let data
-    let results
-    if (is_wxapp === 0) {
-      if (/Android/.test(ua)) {
-        data = await Version.findOne({
-          where: {
-            version,
-            platform: 2,
-          }
-        })
-        results = await Version.findOne({
-          where: {
-            status: 1,
-            platform: 2,
-          }
-        }) 
+    let data = await Version.findOne({
+      where: {
+        version,
+        platform,
+        status: 0            
       }
+    })
 
-      if (/like Mac OS X/.test(ua)) {
-        data = await Version.findOne({
-          where: {
-            platform: 1,
-            version
-          }
-        })
-        results = await Version.findOne({
-          where: {
-            status: 1,
-            platform: 1,
-          }
-        }) 
-      }
+    if (data) {
+      return res.json({...MESSAGE.OK, data})
     } else {
-      data = await Version.findOne({
-        where: {
-          platform: 3,
-          version
-        }
-      })
-      results = await Version.findOne({
-        where: {
-          status: 1,
-          platform: 3,
-        }
-      }) 
+      return res.json(MESSAGE.CODE_ERROR)
     }
-    return res.json({...MESSAGE.OK, data, newest: results[0]})
   }
 
   response()
 })
-
 
 module.exports = router

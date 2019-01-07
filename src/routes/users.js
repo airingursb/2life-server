@@ -103,7 +103,7 @@ router.post('/register', (req, res) => {
       if (user) {
         return res.json(MESSAGE.USER_EXIST)
       } else {
-        const user_code = '0' + Math.floor((Math.random() * 89999 + 10000)) // TODO: 可能重复
+        const user_code = Date.now().toString().substring(2)
         const userinfo = {
           account,
           password: md5(password),
@@ -688,7 +688,7 @@ router.post('/bind_account', (req, res) => {
       return res.json(MESSAGE.OK)
     } else {
       // 如果用户不存在，则先注册再绑定
-      const user_code = '0' + Math.floor((Math.random() * 89999 + 10000)) // TODO: 可能重复
+      const user_code = Date.now().toString().substring(2)
       const userinfo = {
         account,
         password: md5(Date.now()),
@@ -758,7 +758,7 @@ router.post('/wxp_login', (req, res) => {
       // 如果用户不存在，若是初次登录就替用户注册
 
       const info = userInfo
-      const user_code = '0' + Math.floor((Math.random() * 89999 + 10000)) // TODO: 可能重复
+      const user_code = Date.now().toString().substring(2)
 
       await User.create({
         account: openid,

@@ -432,7 +432,7 @@ router.get('/store', (req, res) => {
   let ua = req.headers['user-agent']
 
   if (/Android/.test(ua)) {
-    res.location('https://www.pgyer.com/2life')
+    res.location('https://www.coolapk.com/apk/214311')
   } else {
     res.location('https://itunes.apple.com/cn/app/%E5%8F%8C%E7%94%9F%E6%97%A5%E8%AE%B0-%E4%BD%A0%E6%98%AF%E6%88%91%E6%97%A5%E8%AE%B0%E9%87%8C%E5%86%99%E4%B8%8B%E7%9A%84%E4%B8%83%E5%A4%95/id1245100877?mt=8')
   }

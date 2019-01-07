@@ -1,7 +1,7 @@
 import express from 'express'
 import fetch from 'node-fetch'
 
-import { User, Note, Message } from '../models'
+import { User, Note, Message, Comment } from '../models'
 
 import {
   MESSAGE,
@@ -327,5 +327,121 @@ router.get('/refresh_total_notes', (req, res) => {
 
   response()
 })
+
+/* 
+ * 评论功能相关接口
+ * 
+ * 1. 查询评论：notes/show_comment
+ * 2. 添加评论：notes/add_comment
+ * 3. 删除评论：notes/delete_comment
+ */
+
+// 查询评论
+// 注：仅显示自己与日记主人的评论，如果是主人，显示全部评论
+router.get('/show_comment', (req, res) => {
+  const { uid, timestamp, token, note_id, owner_id } = req.query
+  validate(res, true, uid, timestamp, token, note_id, owner_id)
+
+  const response = async () => {
+
+    let comments = []
+    if (uid === owner_id) {
+      // 主人可以看到全部评论
+      comments = await Comment.findAll({
+        where: {
+          note_id,
+          delete: 0
+        }, include: [
+          { model: User, attributes: ['id', 'name', 'sex', 'face', 'status'], as: 'user' },
+          { model: User, attributes: ['id', 'name', 'sex', 'face', 'status'], as: 'reply' }]})
+    } else {
+      // 客人只能看到自己与主人之间的评论
+      comments = await Comment.findAll({
+        where: {
+          user_id: {
+            '$in': [uid, owner_id]
+          },
+          reply_id: {
+            '$in': [uid, owner_id]
+          },
+          note_id,
+          delete: 0
+        }, include: [{ model: User, attributes: ['id', 'name', 'sex', 'face', 'status'] }]})
+    }
+
+    return res.json({
+      ...MESSAGE.OK,
+      comments
+    })
+  }
+
+  response()
+})
+
+// 添加评论
+router.post('/add_comment', (req, res) => {
+
+  // uid: 评论者 id
+  // user_id: 被回复者 id，如果 user_id 等于 uid，代表评论者是公开发信息
+  // owner_id: 日记主人 id
+  const { uid, timestamp, token, note_id, user_id, content, owner_id } = req.body
+  validate(res, true, uid, timestamp, token, note_id, user_id, content, owner_id)
+
+  const response = async () => {
+
+    const user = await User.findOne({ where: { id: uid } }) // 评论者
+    
+    await Comment.create({
+      note_id,
+      user_id: uid,
+      reply_id: user_id,
+      content,
+      delete: 0,
+      date: Date.now()
+    })
+
+    if (uid !== user_id) {
+      const partner = await User.findOne({ where: { id: user_id } }) // 被评论者
+  
+      // 通知对方被回复
+      JiGuangPush(user_id, `${user.name} 回复了你的评论`)
+      await Message.create({
+        title: `${user.name} 回复了你的评论`,
+        type: 203,
+        content: '',
+        image: '',
+        url: '',
+        date: Date.now(),
+        user_id
+      })
+      await partner.increment('unread')
+    } else {
+      // 公开发有两种情况:
+      // 1. 主人评论，不通知
+      // 2. 客人评论，通知
+      // 此处处理情况2
+      if (uid !== owner_id) {
+        // 通知主人被评论
+        JiGuangPush(owner_id, `${user.name} 评论了你的日记，真是幸福的一天`)
+        await Message.create({
+          title: `${user.name} 评论了你的日记，真是幸福的一天`,
+          type: 203,
+          content: '',
+          image: '',
+          url: '',
+          date: Date.now(),
+          user_id: owner_id
+        })
+        await partner.increment('unread')
+      }
+    }
+
+    return res.json(MESSAGE.OK)
+  } 
+
+  response()
+})
+
+// TODO: 删除评论
 
 module.exports = router

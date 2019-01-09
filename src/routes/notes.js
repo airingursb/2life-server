@@ -444,4 +444,33 @@ router.post('/add_comment', (req, res) => {
 
 // TODO: 删除评论
 
+/* 
+ * 树洞功能相关接口
+ * 
+ * 1. 获取树洞列表：notes/show_holes
+ */
+
+// 获取树洞列表
+router.get('/show_comment', (req, res) => {
+  const { uid, timestamp, token, note_id, owner_id } = req.query
+  validate(res, true, uid, timestamp, token, note_id, owner_id)
+
+  const response = async () => {
+
+    const data = await Note.findAll({
+      where: {
+        hole_alive: {
+          'gte': Data.now()
+        }
+      }, include: [{ model: User, attributes: ['id', 'name', 'sex', 'face', 'status'] }]})
+    
+    return res.json({
+      ...MESSAGE.OK,
+      data
+    })
+  }
+
+  response()
+})
+
 module.exports = router

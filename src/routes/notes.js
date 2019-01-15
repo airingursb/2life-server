@@ -366,7 +366,9 @@ router.get('/show_comment', (req, res) => {
           },
           note_id,
           delete: 0
-        }, include: [{ model: User, attributes: ['id', 'name', 'sex', 'face', 'status'] }]})
+        }, include: [
+          { model: User, attributes: ['id', 'name', 'sex', 'face', 'status'], as: 'user' },
+          { model: User, attributes: ['id', 'name', 'sex', 'face', 'status'], as: 'reply' }]})
     }
 
     return res.json({
@@ -421,6 +423,9 @@ router.post('/add_comment', (req, res) => {
       // 2. 客人评论，通知
       // 此处处理情况2
       if (uid !== owner_id) {
+
+        const owner = await User.findOne({ where: { id: owner_id } }) // 主人
+
         // 通知主人被评论
         JiGuangPush(owner_id, `${user.name} 评论了你的日记，真是幸福的一天`)
         await Message.create({
@@ -432,7 +437,7 @@ router.post('/add_comment', (req, res) => {
           date: Date.now(),
           user_id: owner_id
         })
-        await partner.increment('unread')
+        await owner.increment('unread')
       }
     }
 

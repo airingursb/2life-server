@@ -456,7 +456,7 @@ router.post('/add_comment', (req, res) => {
  */
 
 // 获取树洞列表
-router.get('/show_comment', (req, res) => {
+router.get('/show_holes', (req, res) => {
   const { uid, timestamp, token, note_id, owner_id } = req.query
   validate(res, true, uid, timestamp, token, note_id, owner_id)
 

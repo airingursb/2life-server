@@ -11,6 +11,7 @@ const Message = db.import('./message')
 const Token = db.import('./token')
 const Activity = db.import('./activity')
 const Version = db.import('./version')
+const Report = db.import('./report')
 
 User.hasMany(Note, { foreignKey: 'user_id' })
 User.hasMany(Feedback, { foreignKey: 'user_id' })
@@ -28,6 +29,8 @@ Comment.belongsTo(Note)
 Feedback.belongsTo(User)
 Badge.belongsTo(Award)
 Badge.belongsTo(User)
+Report.belongsTo(User, { foreignKey: 'user_id' })
+Report.belongsTo(Note, { foreignKey: 'note_id' })
 
 db.sync()
 
@@ -42,5 +45,6 @@ module.exports = {
   Message,
   Token,
   Activity,
-  Version
+  Version,
+  Report
 }

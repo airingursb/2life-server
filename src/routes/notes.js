@@ -333,7 +333,7 @@ router.get('/refresh_total_notes', (req, res) => {
  * 
  * 1. 查询评论：notes/show_comment
  * 2. 添加评论：notes/add_comment
- * 3. 删除评论：notes/delete_comment
+ * 3. TODO: 删除评论：notes/delete_comment
  */
 
 // 查询评论
@@ -447,27 +447,27 @@ router.post('/add_comment', (req, res) => {
   response()
 })
 
-// TODO: 删除评论
-
 /* 
  * 树洞功能相关接口
  * 
  * 1. 获取树洞列表：notes/show_holes
+ * 2. 举报树洞：notes/report_hole
+ * 3. TODO: 获取匿名评论：notes/show_hole_comments
  */
 
 // 获取树洞列表
 router.get('/show_holes', (req, res) => {
-  const { uid, timestamp, token, note_id, owner_id } = req.query
-  validate(res, true, uid, timestamp, token, note_id, owner_id)
+  const { uid, timestamp, token } = req.query
+  validate(res, true, uid, timestamp, token)
 
   const response = async () => {
 
     const data = await Note.findAll({
       where: {
         hole_alive: {
-          'gte': Data.now()
+          'gte': Date.now()
         }
-      }, include: [{ model: User, attributes: ['id', 'name', 'sex', 'face', 'status'] }]})
+      }, include: [{ model: User, attributes: ['id', 'code', 'name', 'sex', 'face', 'status', 'emotions_type'] }]})
     
     return res.json({
       ...MESSAGE.OK,

@@ -1,7 +1,7 @@
 import express from 'express'
 import fetch from 'node-fetch'
 
-import { User, Note, Message, Comment } from '../models'
+import { User, Note, Message, Comment, Report } from '../models'
 
 import {
   MESSAGE,
@@ -472,6 +472,21 @@ router.get('/show_holes', (req, res) => {
     return res.json({
       ...MESSAGE.OK,
       data
+    })
+  }
+
+  response()
+})
+
+router.get('/report_hole', (req, res) => {
+  const { uid, timestamp, token, note_id } = req.query
+  validate(res, true, uid, timestamp, token, note_id)
+
+  const response = async () => {
+    await Report.create({
+      note_id,
+      user_id: uid,
+      pass: 0
     })
   }
 

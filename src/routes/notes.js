@@ -457,18 +457,37 @@ router.post('/add_comment', (req, res) => {
 
 // 获取树洞列表
 router.get('/show_holes', (req, res) => {
-  const { uid, timestamp, token } = req.query
-  validate(res, true, uid, timestamp, token)
+  const { uid, timestamp, token, version } = req.query
+  validate(res, true, uid, timestamp, token, version)
 
   const response = async () => {
 
-    const data = await Note.findAll({
-      where: {
-        hole_alive: {
-          'gte': Date.now()
-        }
-      }, include: [{ model: User, attributes: ['id', 'code', 'name', 'sex', 'face', 'status', 'emotions_type'] }]})
-    
+    let data = []
+
+    if (version !== '2.2.1') {
+      const { pageIndex, pageSize } = req.query
+      data = await Note.findAll({
+        where: {
+          hole_alive: {
+            'gte': Date.now()
+          }
+        }, 
+        order: 'date DESC', 
+        offset: pageIndex * pageSize, 
+        limit: pageSize,
+        include: [{ model: User, attributes: ['id', 'code', 'name', 'sex', 'face', 'status', 'emotions_type'] }]})  
+    } else {
+      // 2.2.1 版本未做分页处理
+      data = await Note.findAll({
+        where: {
+          hole_alive: {
+            'gte': Date.now()
+          }
+        }, 
+        order: 'date DESC',
+        include: [{ model: User, attributes: ['id', 'code', 'name', 'sex', 'face', 'status', 'emotions_type'] }]})
+    }
+
     return res.json({
       ...MESSAGE.OK,
       data

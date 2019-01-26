@@ -474,7 +474,7 @@ router.get('/show_holes', (req, res) => {
         }, 
         order: 'date DESC', 
         offset: pageIndex * pageSize, 
-        limit: pageSize,
+        limit: +pageSize,
         include: [{ model: User, attributes: ['id', 'code', 'name', 'sex', 'face', 'status', 'emotions_type'] }]})  
     } else {
       // 2.2.1 版本未做分页处理

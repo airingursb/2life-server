@@ -810,8 +810,10 @@ router.post('/wxp_login', (req, res) => {
 /* users/feedback */
 router.post('/feedback', (req, res) => {
 
-  const { uid, token, timestamp, title, content, type } = req.body
+  const { uid, token, timestamp, title, content, type, brand = '', systemVersion = ''} = req.body
   validate(res, false, uid, token, timestamp, title, content, type)
+
+  const { version = '' } = req.query
 
   let labels = ['discussion']
 
@@ -838,7 +840,7 @@ router.post('/feedback', (req, res) => {
 
     const user = await User.findById(uid)
 
-    const body = `\n![${uid}](${user.face + '-46.jpg'}) ${user.name}\n---\n${content}`
+    const body = `\n![${uid}](${user.face + '-46.jpg'}) ${user.name}\n Brand:${brand}, System:${systemVersion}, Version:${version}\n --- \n${content}`
 
     let options = {
       uri: 'https://api.github.com/repos/oh-bear/2life/issues',
@@ -859,7 +861,10 @@ router.post('/feedback', (req, res) => {
       title,
       content,
       type,
-      user_id: uid
+      user_id: uid,
+      brand,
+      system_version: systemVersion,
+      version
     })
     await rp(options) // 此处请求时间太长，前端可以不必等待响应
     return res.json(MESSAGE.OK)

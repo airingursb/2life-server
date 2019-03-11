@@ -16,5 +16,6 @@ module.exports = (sequelize, DataTypes) => {
     'status': INTEGER,
     'uuid': STRING(100),
     'hole_alive': DOUBLE, // 树洞下线时间：-1 为不发布到树洞。
+    'v': INTEGER
   })
 }

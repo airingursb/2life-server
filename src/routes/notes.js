@@ -70,6 +70,24 @@ router.post('/publish', (req, res) => {
 
   const response = async () => {
     const user = await User.findOne({ where: { id: uid } })
+
+    const note = await Note.findOne({
+      where: {
+        user_id: uid,
+        title,
+        content,
+        date: {
+          'gte': (req.body.date || Date.now()) - 10000,
+          'lte': (req.body.date || Date.now()) + 10000
+        }
+      }
+    })
+
+    if (note) {
+      res.json({ code: 504 })
+      return
+    }
+
     const sens = await callApi('TextSensitivity', 2)
     const { sensitive } = sens
     if (sensitive > 0.70) {
@@ -353,7 +371,8 @@ router.get('/show_comment', (req, res) => {
           delete: 0
         }, include: [
           { model: User, attributes: ['id', 'name', 'sex', 'face', 'status'], as: 'user' },
-          { model: User, attributes: ['id', 'name', 'sex', 'face', 'status'], as: 'reply' }]})
+          { model: User, attributes: ['id', 'name', 'sex', 'face', 'status'], as: 'reply' }]
+      })
     } else {
       // 客人只能看到自己与主人之间的评论
       comments = await Comment.findAll({
@@ -368,7 +387,8 @@ router.get('/show_comment', (req, res) => {
           delete: 0
         }, include: [
           { model: User, attributes: ['id', 'name', 'sex', 'face', 'status'], as: 'user' },
-          { model: User, attributes: ['id', 'name', 'sex', 'face', 'status'], as: 'reply' }]})
+          { model: User, attributes: ['id', 'name', 'sex', 'face', 'status'], as: 'reply' }]
+      })
     }
 
     return res.json({
@@ -392,7 +412,7 @@ router.post('/add_comment', (req, res) => {
   const response = async () => {
 
     const user = await User.findOne({ where: { id: uid } }) // 评论者
-    
+
     await Comment.create({
       note_id,
       user_id: uid,
@@ -404,7 +424,7 @@ router.post('/add_comment', (req, res) => {
 
     if (uid !== user_id) {
       const partner = await User.findOne({ where: { id: user_id } }) // 被评论者
-  
+
       // 通知对方被回复
       JiGuangPush(user_id, `${user.name} 回复了你的评论`)
       await Message.create({
@@ -442,7 +462,7 @@ router.post('/add_comment', (req, res) => {
     }
 
     return res.json(MESSAGE.OK)
-  } 
+  }
 
   response()
 })
@@ -471,11 +491,12 @@ router.get('/show_holes', (req, res) => {
           hole_alive: {
             'gte': Date.now()
           }
-        }, 
-        order: 'date DESC', 
-        offset: pageIndex * pageSize, 
+        },
+        order: 'date DESC',
+        offset: pageIndex * pageSize,
         limit: +pageSize,
-        include: [{ model: User, attributes: ['id', 'code', 'name', 'sex', 'face', 'status', 'emotions_type'] }]})  
+        include: [{ model: User, attributes: ['id', 'code', 'name', 'sex', 'face', 'status', 'emotions_type'] }]
+      })
     } else {
       // 2.2.1 版本未做分页处理
       data = await Note.findAll({
@@ -483,9 +504,10 @@ router.get('/show_holes', (req, res) => {
           hole_alive: {
             'gte': Date.now()
           }
-        }, 
+        },
         order: 'date DESC',
-        include: [{ model: User, attributes: ['id', 'code', 'name', 'sex', 'face', 'status', 'emotions_type'] }]})
+        include: [{ model: User, attributes: ['id', 'code', 'name', 'sex', 'face', 'status', 'emotions_type'] }]
+      })
     }
 
     return res.json({

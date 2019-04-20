@@ -29,7 +29,7 @@ const router = express.Router()
 router.post('/code', (req, res) => {
 
   const { account } = req.body
-  const region = req.query.region || 'china'
+  const region = req.body.region || 'china'
   validate(res, false, account)
 
   const now = Date.now()
@@ -37,7 +37,7 @@ router.post('/code', (req, res) => {
 
   const postData = {
     mobile: account,
-    text: region === 'china' ? ('【双生日记】您的验证码是' + code) : ('【2Life】Your SMS Verification Code:' + code),
+    text: region === 'china' ? ('【双生日记】您的验证码是' + code) : ('【2Life】Your SMS Verification Code: ' + code),
     apikey: YUNPIAN_APIKEY
   }
 

@@ -73,12 +73,12 @@ router.post('/code', (req, res) => {
   const response = async () => {
     const results = await Code.findAll({ where: { account, used: false } })
     if (results[0] !== undefined) {
-      if (now - results[0].timestamp < 600000) {
+      if (now - results[0].timestamp < 60000) {
         return res.json(MESSAGE.REQUEST_ERROR)
       }
     }
     await Code.create(model)
-    await sendMsg()
+    await sendMsg() // TODO: 取消本行注释
     return res.json({ ...MESSAGE.OK, data: { timestamp: now } })
   }
 
@@ -132,6 +132,96 @@ router.post('/register', (req, res) => {
 
   response()
 })
+
+router.post('/v3/confirm_sms', (req, res) => {
+  const { account, code, timestamp, accountArea } = req.body
+  validate(res, false, account, code, timestamp, accountArea)
+
+  const findCode = async () => {
+    return await Code.findOne({ where: { account: accountArea + account, code, timestamp } })
+  }
+
+  const response = async () => {
+    const code = await findCode()
+    if (code) {
+      return res.json(MESSAGE.OK)
+    } else {
+      return res.json(MESSAGE.CODE_ERROR)
+    }
+  }
+
+  response()
+})
+
+/* users/register */
+router.post('/v3/register', (req, res) => {
+
+  // TODO: 重写逻辑
+  const { account, password, code, timestamp, area } = req.body
+  validate(res, false, account, password, code, timestamp, area)
+
+  const findCode = async () => {
+    return await Code.findOne({ where: { code, timestamp } })
+  }
+
+  const response = async () => {
+    const code = await findCode()
+    if (code) {
+      const user = await User.findOne({ where: { account } })
+      if (user) {
+        return res.json(MESSAGE.USER_EXIST)
+      } else {
+        const user_code = Date.now().toString().substring(2)
+        const userinfo = {
+          account,
+          password: md5(password),
+          sex: 0,
+          name: account,
+          user_other_id: -1,
+          code: user_code,
+          status: 502,
+          last_times: 3,
+          total_times: 0,
+          total_notes: 0,
+          mode: 0,
+          rate: 0,
+          badge_id: -1,
+          badges: '',
+          ban_id: user_code + ',',
+          face: '',
+          area: '',
+          vip: 0,
+          date: Date.now()
+        }
+        await User.create(userinfo)
+        return res.json({ ...MESSAGE.OK, data: userinfo })
+      }
+    }
+    return res.json(MESSAGE.CODE_ERROR)
+  }
+
+  response()
+})
+
+/* users/v3/confirm_account */
+router.post('/v3/confirm_account', (req, res) => {
+
+  const { account } = req.body
+  validate(res, false, account)
+
+  // TODO: 2.x 注册的要给优惠
+  const response = async () => {
+    const user = await User.findOne({ where: { account } })
+    if (user) {
+      return res.json(MESSAGE.USER_EXIST)
+    } else {
+      return res.json(MESSAGE.OK)
+    }
+  }
+
+  response()
+})
+
 
 /* users/login */
 router.post('/login', (req, res) => {
@@ -199,7 +289,7 @@ router.get('/user', (req, res) => {
 /* users/update */
 router.post('/update', (req, res) => {
 
-  const { uid, timestamp, token, sex, name, face, status, latitude, longitude, badge_id, badges } = req.body
+  const { uid, timestamp, token, sex, name, face, status, latitude = -1, longitude = -1, badge_id = -1, badges } = req.body
   validate(res, true, uid, timestamp, token, sex, name, face, status, latitude, longitude, badge_id)
 
   const response = async () => {
@@ -810,7 +900,7 @@ router.post('/wxp_login', (req, res) => {
 /* users/feedback */
 router.post('/feedback', (req, res) => {
 
-  const { uid, token, timestamp, title, content, type, brand = '', systemVersion = ''} = req.body
+  const { uid, token, timestamp, title, content, type, brand = '', systemVersion = '' } = req.body
   validate(res, false, uid, token, timestamp, title, content, type)
 
   const { version = '' } = req.query

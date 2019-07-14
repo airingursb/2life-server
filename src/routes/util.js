@@ -24,7 +24,8 @@ import {
   NLP_ID,
   NLP_SECRET,
   WXP_APPID,
-  WXP_SECRET
+  WXP_SECRET,
+  WEBHOOK_KEY_GITHUB
 } from '../config/index'
 
 import Promise from 'Promise'
@@ -57,7 +58,8 @@ router.get('/qiniu_token', (req, res) => {
   const putPolicy = new qiniu.rs.PutPolicy(BUCKET + ':' + filename)
   const data = putPolicy.token()
 
-  return res.json({ ...MESSAGE.OK,
+  return res.json({
+    ...MESSAGE.OK,
     data
   })
 })
@@ -82,7 +84,8 @@ router.get('/get_ocr_sign', (req, res) => {
   const bin = Buffer.concat([signTmp, data])
   const sign = Buffer.from(bin).toString('base64')
 
-  return res.json({ ...MESSAGE.OK,
+  return res.json({
+    ...MESSAGE.OK,
     data: sign
   })
 })
@@ -173,24 +176,17 @@ router.post('/get_nlp_result', (req, res) => {
         total_notes: total_notes + 1,
         mode: Math.floor((total_modes + Math.floor(positive * 100)) / (total_notes + 1)),
         emotions
-      }, {
-        where: {
-          id: uid
-        }
-      })
+      }, { where: { id: uid } })
     } else {
 
       await User.update({
         total_notes: total_notes + 1,
         mode: Math.floor((total_modes + Math.floor(positive * 100)) / (total_notes + 1))
-      }, {
-        where: {
-          id: uid
-        }
-      })
+      }, { where: { id: uid } })
     }
 
-    return res.json({ ...MESSAGE.OK,
+    return res.json({
+      ...MESSAGE.OK,
       data: positive
     })
   }
@@ -273,7 +269,8 @@ router.get('/update_emotion_report', (req, res) => {
     }
 
     if (emotions_types.indexOf(user.emotions_type) !== -1) {
-      return res.json({ ...MESSAGE.OK,
+      return res.json({
+        ...MESSAGE.OK,
         data: user
       })
     } else {
@@ -285,18 +282,16 @@ router.get('/update_emotion_report', (req, res) => {
       await User.update({
         emotions_type,
         emotions_report
-      }, {
-        where: {
-          id: uid
-        }
-      })
+      }, { where: { id: uid } })
       user = await User.findOne({
         where: {
           id: uid
         }
       })
-      return res.json({ ...MESSAGE.OK,
-        data: { ...user,
+      return res.json({
+        ...MESSAGE.OK,
+        data: {
+          ...user,
           emotions_url
         }
       })
@@ -316,7 +311,8 @@ router.get('/show_act', (req, res) => {
   validate(res, true, uid, timestamp, token)
 
   // url: 活动主页, shareUrl: 分享页面
-  return res.json({ ...MESSAGE.OK,
+  return res.json({
+    ...MESSAGE.OK,
     show: true,
     url: 'https://2life.act.ursb.me/#/',
     shareUrl: 'https://2life.act.ursb.me/#/invitation'
@@ -363,14 +359,16 @@ router.get('/access_token', (req, res) => {
         alive: true
       })
 
-      return res.json({ ...MESSAGE.OK,
+      return res.json({
+        ...MESSAGE.OK,
         data: {
           access_token: data.access_token,
           timestamp: Date.now()
         }
       })
     } else {
-      return res.json({ ...MESSAGE.OK,
+      return res.json({
+        ...MESSAGE.OK,
         data: {
           access_token,
           timestamp: Date.now()
@@ -477,7 +475,7 @@ router.get('/version', (req, res) => {
       })
     }
     const version = data[0]
-    return res.json({...MESSAGE.OK, data: version})
+    return res.json({ ...MESSAGE.OK, data: version })
   }
 
   response()
@@ -496,18 +494,74 @@ router.get('/check_version', (req, res) => {
       where: {
         version,
         platform,
-        status: 0            
+        status: 0
       }
     })
 
     if (data) {
-      return res.json({...MESSAGE.OK, data})
+      return res.json({ ...MESSAGE.OK, data })
     } else {
       return res.json(MESSAGE.CODE_ERROR)
     }
   }
 
   response()
+})
+
+router.post('/git_webhook', (req, res) => {
+  const { secret } = req.query
+  const { sender: { login } } = req.body
+
+  if (secret !== WEBHOOK_KEY_GITHUB) return
+
+  const response = async () => {
+
+    let webhookOptions = {
+      uri: `https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${WEBHOOK_KEY_GITHUB}`,
+      method: 'POST',
+      body: {
+        msgtype: 'text',
+        markdown: {
+          content: `${login} 刚刚提交了代码，请相关成员注意。`,
+        }
+      },
+      json: true
+    }
+    await rp(webhookOptions)
+
+    return res.json(MESSAGE.OK)
+  }
+
+  response()
+
+})
+
+router.get('/git_webhook', (req, res) => {
+  const { secret } = req.query
+  const { sender: { login } } = req.body
+
+  if (secret !== WEBHOOK_KEY_GITHUB) return
+
+  const response = async () => {
+
+    let webhookOptions = {
+      uri: `https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${WEBHOOK_KEY_GITHUB}`,
+      method: 'POST',
+      body: {
+        msgtype: 'text',
+        markdown: {
+          content: `${login} 刚刚提交了代码，请相关成员注意。`,
+        }
+      },
+      json: true
+    }
+    await rp(webhookOptions)
+
+    return res.json(MESSAGE.OK)
+  }
+
+  response()
+
 })
 
 module.exports = router

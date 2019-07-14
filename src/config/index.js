@@ -93,7 +93,8 @@ export const GITHUB_TOKEN = '' // Github token
 export const QCLOUD_APPID = '' // 腾讯云 APPID
 export const QCLOUD_SECRETID = '' // 腾讯云 SECRETID
 export const QCLOUD_SECRETKEY = '' // 腾讯云 SECRETKEY
-export const WEBHOOK_KEY_WECHAT = '' // 企业微信“反馈君@零熊” WebHook
+export const WEBHOOK_KEY_WECHAT = '' // 企业微信“反馈喵@零熊” WebHook
+export const WEBHOOK_KEY_GITHUB = '' // 企业微信“Git喵@零熊” WebHook
 
 export const IS_CHECKING = false
 

@@ -982,9 +982,9 @@ router.post('/feedback', (req, res) => {
             > 系统版本: ${systemVersion}
             > 软件版本: ${version}
 
-            反馈内容 @${user.name}：
-            > ${content}
-          `
+            反馈内容 @${user.name}:
+            ${content}
+          `,
         }
       },
       json: true

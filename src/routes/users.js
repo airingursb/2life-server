@@ -20,7 +20,8 @@ import {
   validate,
   md5Pwd,
   JiGuangPush,
-  IS_CHECKING
+  IS_CHECKING,
+  WEBHOOK_KEY_WECHAT
 } from '../config'
 
 const router = express.Router()
@@ -906,21 +907,31 @@ router.post('/feedback', (req, res) => {
   const { version = '' } = req.query
 
   let labels = ['discussion']
+  let feedbackType = ''
+  let platform = 'ios'
 
   switch (type) {
     case 101:
       labels = ['ios', 'bug']
+      feedbackType = '<font color="warning">缺陷</font>'
+      platform = 'iOS'
       break
     case 102:
       labels = ['android', 'bug']
+      feedbackType = '<font color="warning">缺陷</font>'
+      platform = 'Android'
       break
     case 103:
       labels = ['微信小程序', 'bug']
+      feedbackType = '<font color="warning">缺陷</font>'
+      platform = '微信小程序'
       break
     case 200:
       labels = ['feature request']
+      feedbackType = '<font color="info">需求</font>'
       break
     case 300:
+      feedbackType = '<font color="comment">用户</font>'
       break
     default:
       break
@@ -957,6 +968,29 @@ router.post('/feedback', (req, res) => {
       version
     })
     await rp(options) // 此处请求时间太长，前端可以不必等待响应
+
+    let webhookOptions = {
+      uri: `https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${WEBHOOK_KEY_WECHAT}`,
+      method: 'POST',
+      body: {
+        msgtype: 'markdown',
+        markdown: {
+          content: `实时新增 1 例${feedbackType}反馈，请相关成员注意。
+            > 用户 id: ${uid}
+            > 平台: ${platform}
+            > 手机型号: ${brand}
+            > 系统版本: ${systemVersion}
+            > 软件版本: ${version}
+
+            反馈内容 @${user.name}：
+            > ${content}
+          `
+        }
+      },
+      json: true
+    }
+    await rp(webhookOptions)
+
     return res.json(MESSAGE.OK)
   }
 
@@ -1369,7 +1403,6 @@ router.get('/get_activity', (req, res) => {
 router.post('/reset_password', (req, res) => {
 
   const { account, password, code, timestamp } = req.body
-
   validate(res, false, account, password, code, timestamp)
 
   const findCode = async () => {

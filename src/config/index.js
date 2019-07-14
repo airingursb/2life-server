@@ -93,6 +93,7 @@ export const GITHUB_TOKEN = '' // Github token
 export const QCLOUD_APPID = '' // 腾讯云 APPID
 export const QCLOUD_SECRETID = '' // 腾讯云 SECRETID
 export const QCLOUD_SECRETKEY = '' // 腾讯云 SECRETKEY
+export const WEBHOOK_KEY_WECHAT = '' // 企业微信“反馈君@零熊” WebHook
 
 export const IS_CHECKING = false
 
@@ -125,14 +126,14 @@ export const JiGuangPush = (user_id, message) => {
 }
 
 export const md5Pwd = (password) => {
-  const salt = ''
+  const salt = 'Airing_is_genius_3957x8yza6!@#IUHJh~~'
   return md5(md5(password + salt))
 }
 
 export const validate = (res, check, ...params) => {
 
   for (let param of params) {
-    if (typeof param === 'undefined' || param === null) {
+    if (typeof param === 'undefined') {
       return res.json(MESSAGE.PARAMETER_ERROR)
     }
   }

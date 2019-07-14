@@ -16,9 +16,7 @@ const router = express.Router()
 router.post('/reply', (req, res) => {
 
   const { account, password, uid, content } = req.body
-
   validate(res, false, uid, account, password, content)
-
 
   const response = async () => {
     if (account !== ADMIN_USER || password !== ADMIN_PASSWORD) {
@@ -47,19 +45,15 @@ router.post('/reply', (req, res) => {
 router.get('/user/list', (req, res) => {
 
   const { account, password, page, limit } = req.body
-
   validate(res, false, uid, account, password, page, limit)
 
   const response = async () => {
-
     if (page <= 0 || limit < 1) {
       return res.jsonp(MESSAGE.REQUEST_ERROR)
     }
-
     if (account !== ADMIN_USER || password !== ADMIN_PASSWORD) {
       return res.jsonp(MESSAGE.PASSWORD_ERROR)
     }
-
     const users = await User.findAll({ offset: page * limit, limit })
     return res.jsonp({ ...MESSAGE.OK, data: users })
   }
@@ -71,7 +65,6 @@ router.get('/user/list', (req, res) => {
 router.post('/user/last_times', (req, res) => {
 
   const { account, password, uid, last_times } = req.body
-
   validate(res, false, uid, account, password, last_times)
 
   const response = async () => {
@@ -79,13 +72,11 @@ router.post('/user/last_times', (req, res) => {
     if (last_times < 0) {
       return res.jsonp(MESSAGE.REQUEST_ERROR)
     }
-
     if (account !== ADMIN_USER || password !== ADMIN_PASSWORD) {
       return res.jsonp(MESSAGE.PASSWORD_ERROR)
     }
 
     await User.update({ last_times }, { where: { id: uid } })
-
     return res.jsonp(MESSAGE.OK)
   }
 
@@ -97,17 +88,13 @@ router.post('/user/last_times', (req, res) => {
 router.post('/user/vip_expires', (req, res) => {
 
   const { account, password, uid, vip_expires, vip } = req.body
-
   validate(res, false, uid, account, password, vip_expires, vip)
-
 
   const response = async () => {
     if (account !== ADMIN_USER || password !== ADMIN_PASSWORD) {
       return res.jsonp(MESSAGE.PASSWORD_ERROR)
     }
-
     await User.update({ vip_expires, vip }, { where: { id: uid } })
-
     return res.jsonp(MESSAGE.OK)
   }
 
@@ -118,17 +105,13 @@ router.post('/user/vip_expires', (req, res) => {
 router.get('/user/reset_last_times', (req, res) => {
 
   const { account, password } = req.query
-
   validate(res, false, account, password)
-
 
   const response = async () => {
     if (account !== ADMIN_USER || password !== ADMIN_PASSWORD) {
       return res.jsonp(MESSAGE.PASSWORD_ERROR)
     }
-
     await User.update({ last_times: 3 }, { where: { last_times: { lt: 3 } } })
-
     return res.jsonp(MESSAGE.OK)
   }
 

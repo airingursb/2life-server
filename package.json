@@ -27,7 +27,8 @@
     "redis": "^2.8.0",
     "request-promise": "^4.2.2",
     "sequelize": "^3.31.1",
-    "sha1": "^1.1.1"
+    "sha1": "^1.1.1",
+    "tencentcloud-sdk-nodejs": "^3.0.94"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",

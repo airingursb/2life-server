@@ -40,6 +40,16 @@ const capi = new Capi({
   serviceType: 'wenzhi'
 })
 
+const tencentcloud = require('tencentcloud-sdk-nodejs')
+
+const NlpClient = tencentcloud.nlp.v20190408.Client
+const models = tencentcloud.nlp.v20190408.Models
+
+const Credential = tencentcloud.common.Credential
+const ClientProfile = tencentcloud.common.ClientProfile
+const HttpProfile = tencentcloud.common.HttpProfile
+
+
 const router = express.Router()
 qiniu.conf.ACCESS_KEY = QINIU_ACCESS
 qiniu.conf.SECRET_KEY = QINIU_SECRET
@@ -101,24 +111,52 @@ router.post('/get_nlp_result', (req, res) => {
   } = req.body
   validate(res, true, uid, timestamp, token)
 
-  const callApi = () => {
+  // 文档：https://cloud.tencent.com/document/product/271/35497
+  const callApi = (action) => {
+
     return new Promise((resolve, reject) => {
-      capi.request({
-        Region: 'gz',
-        Action: 'TextSentiment',
-        content
-      }, (err, d) => {
-        resolve(d)
-        reject(err)
-      })
+
+      let cred = new Credential(NLP_ID, NLP_SECRET)
+      let httpProfile = new HttpProfile()
+      httpProfile.endpoint = 'nlp.tencentcloudapi.com'
+      let clientProfile = new ClientProfile()
+      clientProfile.httpProfile = httpProfile
+      let client = new NlpClient(cred, 'ap-guangzhou', clientProfile)
+
+      let params = `{"Text": "${content}"}`
+      let req
+
+      // 内容敏感审核
+      if (action === 'TextSensitivity') {
+        req = new models.ContentApprovalRequest()
+        req.from_json_string(params)
+        client.ContentApproval(req, function (errMsg, response) {
+          if (errMsg) {
+            reject(errMsg)
+          } else {
+            resolve(response)
+          }
+        })
+      }
+
+      // 情感分析
+      if (action === 'TextSentiment') {
+        req = new models.SentimentAnalysisRequest()
+        req.from_json_string(params)
+        client.SentimentAnalysis(req, function (errMsg, response) {
+          if (errMsg) {
+            reject(errMsg)
+          } else {
+            resolve(response)
+          }
+        })
+      }
     })
   }
 
   const response = async () => {
-    const data = await callApi()
-    const {
-      positive
-    } = data
+    const data = await callApi('TextSentiment')
+    const { Positive: positive } = data
 
     const user = await User.findOne({
       where: {

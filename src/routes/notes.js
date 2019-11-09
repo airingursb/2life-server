@@ -13,13 +13,14 @@ import {
 
 import Promise from 'Promise'
 
-import Capi from 'qcloudapi-sdk'
+const tencentcloud = require('tencentcloud-sdk-nodejs')
 
-const capi = new Capi({
-  SecretId: NLP_ID,
-  SecretKey: NLP_SECRET,
-  serviceType: 'wenzhi'
-})
+const NlpClient = tencentcloud.nlp.v20190408.Client
+const models = tencentcloud.nlp.v20190408.Models
+
+const Credential = tencentcloud.common.Credential
+const ClientProfile = tencentcloud.common.ClientProfile
+const HttpProfile = tencentcloud.common.HttpProfile
 
 const router = express.Router()
 
@@ -53,18 +54,46 @@ router.post('/publish', (req, res) => {
     latitude,
     images)
 
-  // 文档：https://cloud.tencent.com/document/product/271/2072
-  const callApi = (action, type) => {
+  // 文档：https://cloud.tencent.com/document/product/271/35497
+  const callApi = (action) => {
+
     return new Promise((resolve, reject) => {
-      capi.request({
-        Region: 'gz',
-        Action: action,
-        content: title + '。' + content,
-        type
-      }, (err, d) => {
-        resolve(d)
-        reject(err)
-      })
+
+      let cred = new Credential(NLP_ID, NLP_SECRET)
+      let httpProfile = new HttpProfile()
+      httpProfile.endpoint = 'nlp.tencentcloudapi.com'
+      let clientProfile = new ClientProfile()
+      clientProfile.httpProfile = httpProfile
+      let client = new NlpClient(cred, 'ap-guangzhou', clientProfile)
+
+      let params = `{"Text": "${title + '。' + content}"}`
+      let req
+
+      // 内容敏感审核
+      if (action === 'TextSensitivity') {
+        req = new models.ContentApprovalRequest()
+        req.from_json_string(params)
+        client.ContentApproval(req, function (errMsg, response) {
+          if (errMsg) {
+            reject(errMsg)
+          } else {
+            resolve(response)
+          }
+        })
+      }
+
+      // 情感分析
+      if (action === 'TextSentiment') {
+        req = new models.SentimentAnalysisRequest()
+        req.from_json_string(params)
+        client.SentimentAnalysis(req, function (errMsg, response) {
+          if (errMsg) {
+            reject(errMsg)
+          } else {
+            resolve(response)
+          }
+        })
+      }
     })
   }
 
@@ -88,14 +117,14 @@ router.post('/publish', (req, res) => {
       return
     }
 
-    const sens = await callApi('TextSensitivity', 2)
-    const { sensitive } = sens
-    if (sensitive > 0.70) {
+    const sens = await callApi('TextSensitivity')
+    const { EvilKeywords } = sens
+    if (EvilKeywords) {
       return res.json(MESSAGE.REQUEST_ERROR)
     }
 
-    const data = await callApi('TextSentiment', 4)
-    const { positive } = data
+    const data = await callApi('TextSentiment')
+    const { Positive } = data
 
     await Note.create({
       user_id: uid,
@@ -106,7 +135,7 @@ router.post('/publish', (req, res) => {
       latitude,
       location,
       is_liked: 0,
-      mode: req.body.mode || Math.floor(positive * 100),
+      mode: req.body.mode || Math.floor(Positive * 100),
       date: req.body.date || Date.now(),
       status: req.body.status || user.status
     })

@@ -122,7 +122,7 @@ router.post('/publish', (req, res) => {
     const { EvilKeywords } = await callApi('TextSensitivity')
 
     const userAgent = req['headers']['user-agent'].toLowerCase()
-    if (userAgent.match('miniprogram') !== null || userAgent.match('wechatdevtool') !== null) {
+    if (userAgent.match('micromessenger') !== null || userAgent.match('wechatdevtool') !== null) {
       console.log('user-agent:', userAgent)
 
       const msgSecCheck = await wechatContentCheck(title + '-' + content)
@@ -356,7 +356,7 @@ router.post('/update', (req, res) => {
   const response = async () => {
 
     const userAgent = req['headers']['user-agent'].toLowerCase()
-    if (userAgent.match('miniprogram') !== null || userAgent.match('wechatdevtool') !== null) {
+    if (userAgent.match('micromessenger') !== null || userAgent.match('wechatdevtool') !== null) {
       console.log('user-agent:', userAgent)
 
       const msgSecCheck = await wechatContentCheck(title + '-' + content)

@@ -68,13 +68,13 @@ router.post('/publish', (req, res) => {
       clientProfile.httpProfile = httpProfile
       let client = new NlpClient(cred, 'ap-guangzhou', clientProfile)
 
-      let params = `{"Text": "${title + '。' + content}"}`
+      let params = {Text: `${title}.${content}`}
       let req
 
       // 内容敏感审核
       if (action === 'TextSensitivity') {
         req = new models.ContentApprovalRequest()
-        req.from_json_string(params)
+        req.from_json_string(JSON.stringify(params))
         client.ContentApproval(req, function (errMsg, response) {
           if (errMsg) {
             reject(errMsg)
@@ -87,7 +87,7 @@ router.post('/publish', (req, res) => {
       // 情感分析
       if (action === 'TextSentiment') {
         req = new models.SentimentAnalysisRequest()
-        req.from_json_string(params)
+        req.from_json_string(JSON.stringify(params))
         client.SentimentAnalysis(req, function (errMsg, response) {
           if (errMsg) {
             reject(errMsg)

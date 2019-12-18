@@ -65,3 +65,4 @@ logs/
 mochawesome-report/
 
 package-lock.json
+src/config/index.js

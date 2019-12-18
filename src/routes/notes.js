@@ -11,6 +11,8 @@ import {
   NLP_SECRET
 } from '../config'
 
+import { wechatContentCheck, wechatImgCheck } from '../utils'
+
 import Promise from 'Promise'
 
 const tencentcloud = require('tencentcloud-sdk-nodejs')
@@ -117,10 +119,22 @@ router.post('/publish', (req, res) => {
       return
     }
 
-    const sens = await callApi('TextSensitivity')
-    const { EvilKeywords } = sens
-    if (EvilKeywords) {
-      return res.json(MESSAGE.REQUEST_ERROR)
+    const { EvilKeywords } = await callApi('TextSensitivity')
+
+    const userAgent = req['headers']['user-agent'].toLowerCase()
+    if (userAgent.match('miniprogram') !== null || userAgent.match('wechatdevtool') !== null) {
+      console.log('user-agent:', userAgent)
+
+      const msgSecCheck = await wechatContentCheck(title + '-' + content)
+      const imgSecCheck = await wechatImgCheck(images)
+
+      if (EvilKeywords || msgSecCheck.errcode !== 0 || imgSecCheck.errcode !== 0) {
+        return res.json(MESSAGE.REQUEST_ERROR)
+      }
+    } else {
+      if (EvilKeywords) {
+        return res.json(MESSAGE.REQUEST_ERROR)
+      }
     }
 
     const data = await callApi('TextSentiment')
@@ -340,6 +354,19 @@ router.post('/update', (req, res) => {
   validate(res, true, uid, timestamp, token, note_id, title, content, images, mode)
 
   const response = async () => {
+
+    const userAgent = req['headers']['user-agent'].toLowerCase()
+    if (userAgent.match('miniprogram') !== null || userAgent.match('wechatdevtool') !== null) {
+      console.log('user-agent:', userAgent)
+
+      const msgSecCheck = await wechatContentCheck(title + '-' + content)
+      const imgSecCheck = await wechatImgCheck(images)
+
+      if (msgSecCheck.errcode !== 0 || imgSecCheck.errcode !== 0) {
+        return res.json(MESSAGE.REQUEST_ERROR)
+      }
+    }
+
     const user = await User.findOne({ where: { id: uid } })
     await Note.update({ title, content, images, mode: Math.floor(mode) }, { where: { id: note_id } })
 
@@ -375,9 +402,9 @@ router.get('/refresh_total_notes', (req, res) => {
   response()
 })
 
-/* 
+/*
  * 评论功能相关接口
- * 
+ *
  * 1. 查询评论：notes/show_comment
  * 2. 添加评论：notes/add_comment
  * 3. TODO: 删除评论：notes/delete_comment
@@ -496,9 +523,9 @@ router.post('/add_comment', (req, res) => {
   response()
 })
 
-/* 
+/*
  * 树洞功能相关接口
- * 
+ *
  * 1. 获取树洞列表：notes/show_holes
  * 2. 举报树洞：notes/report_hole
  * 3. TODO: 获取匿名评论：notes/show_hole_comments

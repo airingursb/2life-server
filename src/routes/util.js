@@ -5,7 +5,6 @@ import crypto from 'crypto'
 import {
   User,
   Message,
-  Token,
   Version
 } from '../models'
 
@@ -23,22 +22,22 @@ import {
   QCLOUD_SECRETKEY,
   NLP_ID,
   NLP_SECRET,
-  WXP_APPID,
-  WXP_SECRET,
   WEBHOOK_KEY_GITHUB
 } from '../config/index'
+
+import { getAccessToken } from '../utils'
 
 import Promise from 'Promise'
 
 import rp from 'request-promise'
 
-import Capi from 'qcloudapi-sdk'
-
-const capi = new Capi({
-  SecretId: NLP_ID,
-  SecretKey: NLP_SECRET,
-  serviceType: 'wenzhi'
-})
+// import Capi from 'qcloudapi-sdk'
+//
+// const capi = new Capi({
+//   SecretId: NLP_ID,
+//   SecretKey: NLP_SECRET,
+//   serviceType: 'wenzhi'
+// })
 
 const tencentcloud = require('tencentcloud-sdk-nodejs')
 
@@ -370,49 +369,15 @@ router.get('/access_token', (req, res) => {
 
   const response = async () => {
 
-    const access_token = await Token.findOne({
-      where: {
-        deadline: {
-          'gt': Date.now(),
-          'lt': Date.now() + 7200000
-        }
+    const access_token = await getAccessToken()
+
+    return res.json({
+      ...MESSAGE.OK,
+      data: {
+        access_token,
+        timestamp: Date.now()
       }
     })
-
-    if (!access_token) {
-      const options = {
-        uri: 'https://api.weixin.qq.com/cgi-bin/token',
-        qs: {
-          grant_type: 'client_credential',
-          appid: WXP_APPID,
-          secret: WXP_SECRET
-        },
-        json: true
-      }
-      const data = await rp(options)
-
-      await Token.create({
-        code: data.access_token,
-        deadline: Date.now() + 7000000, // 官方7200秒，这里预留时间防止前端重复请求
-        alive: true
-      })
-
-      return res.json({
-        ...MESSAGE.OK,
-        data: {
-          access_token: data.access_token,
-          timestamp: Date.now()
-        }
-      })
-    } else {
-      return res.json({
-        ...MESSAGE.OK,
-        data: {
-          access_token,
-          timestamp: Date.now()
-        }
-      })
-    }
   }
   response()
 })
